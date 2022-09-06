@@ -15,15 +15,15 @@ import csv
 import numpy as np
 import pandas as pd
 
-from recorder import Recorder
-from constants import Locations as loc
+from recorders.recorder import Recorder
+from constants import loc
 
 
 class SSDRecorder(Recorder): 
     """ Class for data engineering of the SSD2 data. """
 
-    def __init__(self, filepath: str, has_metadata: bool=True):
-        super(SSDRecorder, self).__init__(filepath, has_metadata)
+    def __init__(self, filepath: str=loc.ssd):
+        super(SSDRecorder, self).__init__(filepath, True)
         self.nr_meta_data_rows = 37
 
     def _load_new_data(self) -> pd.DataFrame: 
