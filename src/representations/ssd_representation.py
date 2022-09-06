@@ -15,7 +15,6 @@ import pandas as pd
 from recorders.ssd_recorder import SSDRecorder
 
 
-
 class SSDRepresentation(): 
     
     def __init__(self, ssd_recorder: SSDRecorder): 
