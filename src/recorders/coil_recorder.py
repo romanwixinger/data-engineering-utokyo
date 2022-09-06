@@ -16,11 +16,11 @@ import numpy as np
 import pandas as pd
 
 from recorders.recorder import Recorder
-from constants import loc
+
 
 class CoilRecorder(Recorder): 
        
-    def __init__(self, filepath: str=loc.coil):
+    def __init__(self, filepath: str):
         super(CoilRecorder, self).__init__(filepath, False)
     
     def _load_new_data(self): 

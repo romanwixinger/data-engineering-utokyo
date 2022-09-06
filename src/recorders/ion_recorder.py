@@ -20,13 +20,11 @@ import numpy as np
 import pandas as pd
 
 from recorders.recorder import Recorder
-from constants import loc
-
 
 
 class IonRecorder(Recorder): 
     
-    def __init__(self, filepath: str=loc.ion):
+    def __init__(self, filepath: str):
         super(IonRecorder, self).__init__(filepath, False)
 
     def _load_new_data(self): 

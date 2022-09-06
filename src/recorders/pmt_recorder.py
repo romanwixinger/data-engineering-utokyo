@@ -15,13 +15,12 @@ import numpy as np
 import pandas as pd
 
 from recorders.recorder import Recorder
-from constants import Locations 
-loc = Locations()
+from constants import loc
 
 
 class PMTRecorder(Recorder): 
     
-    def __init__(self, filepath: str=loc.pmt, has_metadata: bool=False):
+    def __init__(self, filepath: str, has_metadata: bool=False):
         super(PMTRecorder, self).__init__(filepath, has_metadata)
     
     def _load_new_data(self): 

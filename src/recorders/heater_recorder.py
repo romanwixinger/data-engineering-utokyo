@@ -16,27 +16,26 @@ import pandas as pd
 import csv
 
 from recorders.recorder import Recorder
-from constants import loc
 
 
 class HeaterRecorder(Recorder): 
     """ Class for data engineering of the heater data. """
     
-    def __init__(self, filepath: str=loc.heater):
+    def __init__(self, filepath: str):
         super(HeaterRecorder, self).__init__(filepath, True)
         self.nr_meta_data_rows = 6
     
     def _load_new_data(self) -> pd.DataFrame:  
         df = pd.read_csv(filepath_or_buffer=self.filepath, 
-                                 skiprows=self.nr_meta_data_rows+self.read_data_lines, 
+                                 skiprows=self.nr_meta_data_rows+self.read_data_lines-1, 
                                  header=0, 
                                  names=["Date", "Time", "Unknown", "TargetPercentage", "MeasuredPercentage"],
-                                 encoding="cp932")
+                                 encoding="utf-8")
         self.read_data_lines += len(df.index)
         return df
     
     def _load_metadata(self): 
-        with open(self.filepath, newline='', encoding="cp932") as f:
+        with open(self.filepath, newline='', encoding="utf-8") as f:
             reader = csv.reader(f)
             metadata_list = list(reader)[:self.nr_meta_data_rows]
             columns = [m[0] for m in metadata_list]

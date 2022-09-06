@@ -16,13 +16,12 @@ import numpy as np
 import pandas as pd
 
 from recorders.recorder import Recorder
-from constants import loc
 
 
 class SSDRecorder(Recorder): 
     """ Class for data engineering of the SSD2 data. """
 
-    def __init__(self, filepath: str=loc.ssd):
+    def __init__(self, filepath: str):
         super(SSDRecorder, self).__init__(filepath, True)
         self.nr_meta_data_rows = 37
 

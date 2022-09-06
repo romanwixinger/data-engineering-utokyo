@@ -15,12 +15,11 @@ import pandas as pd
 import csv
 
 from recorders.recorder import Recorder
-from constants import loc
 
 
 class LaserRecorder(Recorder): 
     
-    def __init__(self, filepath: str=loc.laser): 
+    def __init__(self, filepath: str): 
         super(LaserRecorder, self).__init__(filepath, True)
         self._data_columns = []
         self._metadata_columns = []
