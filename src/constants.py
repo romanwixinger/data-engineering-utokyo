@@ -7,7 +7,7 @@ Created on Mon Sep  5 17:13:32 2022
 File for global constants. 
 """
 
-class Location(): 
+class Locations(): 
     
     _location = "../data/"
     ssd = _location + "-20220314-100806-Slot1-In2.csv"

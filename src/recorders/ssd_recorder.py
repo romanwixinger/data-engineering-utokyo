@@ -8,6 +8,9 @@ SSD Recorder: Applicable for data from the WE7000 DAQ for the SSD2.
 The PMT current from the MOT will be obtained like this in our next experiment.
 """
 
+import sys
+sys.path.insert(0,'..')
+
 import csv
 import numpy as np
 import pandas as pd
@@ -19,7 +22,7 @@ from constants import Locations as loc
 class SSDRecorder(Recorder): 
     """ Class for data engineering of the SSD2 data. """
 
-    def __init__(self, filepath: str=loc.ssd, has_metadata: bool=True):
+    def __init__(self, filepath: str, has_metadata: bool=True):
         super(SSDRecorder, self).__init__(filepath, has_metadata)
         self.nr_meta_data_rows = 37
 
@@ -32,7 +35,7 @@ class SSDRecorder(Recorder):
         self.read_data_lines += len(df.index)
         return df
         
-    def _update_metadata(self): 
+    def _load_metadata(self): 
         """ Overwrite the metadata with the new version. """
         with open(self.filepath, newline='') as f:
             reader = csv.reader(f)
@@ -40,7 +43,7 @@ class SSDRecorder(Recorder):
             metadata =  metadata[:3] +  metadata[4:]
             columns = [line[0] for line in metadata]
             row = [line[1] for line in metadata]
-            self._metadata_df = pd.DataFrame(data=[row], columns=columns)
+            return pd.DataFrame(data=[row], columns=columns)
                 
     def _harmonize_time(self): 
         """ Convert the relative time and start time to the real time. """

@@ -9,16 +9,18 @@ To use the class, just overwrite the three abstractmethods according to the
 csv table which you want to map to a real-time recorder object. 
 """
 
+import sys
+sys.path.insert(0,'..')
 
 import os
 import pandas as pd
 import time
+import datetime
 from abc import abstractmethod
 
 
 class Recorder(object): 
-    """ Base class for mapping a csv file to a pandas dataframe in real-time 
-        when it changes. 
+    """ Base class for mapping a csv file to a pandas dataframe in real-time when it changes. 
     """
     
     def __init__(self, filepath: str, has_metadata: bool=True): 
@@ -108,6 +110,25 @@ class Recorder(object):
         )
         return
     
+    def _update_metadata(self): 
+        self._metadata_df = self._load_metadata() if not self.metadata_is_up_to_date() else self._metadata_df
+        return
+    
+    def _timestamp_to_datetimes(self, df: pd.DataFrame): 
+        """ Takes a pandas dataframe with a timestamp column (int) and also adds date datetime, datetime_ms, datetime_μs. 
+        """
+        # Conversion functions
+        conversion_to_datetime_μs = lambda x: datetime.datetime.fromtimestamp(x/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f')
+        conversion_to_datetime_ms = lambda x: datetime.datetime.fromtimestamp(x/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        conversion_to_datetime = lambda x: datetime.datetime.fromtimestamp(x/1000000000).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Apply conversions
+        df["datetime_μs"] = df["timestamp"].apply(conversion_to_datetime_μs)
+        df["datetime_ms"] = df["timestamp"].apply(conversion_to_datetime_ms)
+        df["datetime"] = df["timestamp"].apply(conversion_to_datetime)
+
+        return
+    
     @abstractmethod
     def _load_new_data(self) -> pd.DataFrame: 
         """ Returns the rows which have not been loaded so far. 
@@ -116,8 +137,8 @@ class Recorder(object):
         pass
     
     @abstractmethod
-    def _update_metadata(self): 
-        """ Updates self.metadata_df and self.metadata_last_updated. We do a full reload. 
+    def _load_metadata(self) -> pd.DataFrame: 
+        """ Returns the current version of the metadata by reloading everything. 
         """
         pass
     

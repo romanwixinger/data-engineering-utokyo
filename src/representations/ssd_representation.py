@@ -7,9 +7,13 @@ Created on Mon Sep  5 17:24:48 2022
 Representation of a recorder as histogram. 
 """
 
+import sys
+sys.path.insert(0,'..')
+
 import pandas as pd
 
 from recorders.ssd_recorder import SSDRecorder
+
 
 
 class SSDRepresentation(): 
