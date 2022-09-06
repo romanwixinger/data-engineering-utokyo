@@ -12,7 +12,7 @@ class Locations():
     
     @classmethod
     def __init__(self, 
-                 location: str="../../data/",
+                 location: str="../../data/sample/",
                  ssd: str="-20220314-100806-Slot1-In2.csv",
                  pmt: str="all_data.csv",
                  coil: str="coil_log.txt",
