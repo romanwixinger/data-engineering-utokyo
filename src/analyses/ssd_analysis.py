@@ -22,7 +22,7 @@ class SSDAnalysis(Analysis):
     def run(self): 
         df = self.recorder.get_table()
         
-        self._plot_2d_hist(
+        fig = self._plot_2d_hist(
             df=df, 
             setting="",
             x_column="timestamp", 
@@ -30,8 +30,13 @@ class SSDAnalysis(Analysis):
             x_bin_nr=100, 
             y_bin_nr=100
             )
-        self._plot_1d_hist(x_column="timestamp", x_bin_nr=100) 
+        self.save(fig, "SSD_Hist2D")
+        
+        fig = self._plot_1d_hist(x_column="timestamp", x_bin_nr=100) 
+        self.save(fig, "SSD_Hist1D")
         return
+    
+    
 
     
 if __name__ == '__main__': 

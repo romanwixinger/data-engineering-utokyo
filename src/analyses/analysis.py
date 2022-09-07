@@ -18,14 +18,21 @@ class Analysis(object):
     """ Class for analyzing relationsships between experimental parameters and measurements. 
     """
     
+    image_src = "../../plots/"
+    image_extension = ".png"
+    
     def __init__(self, recorder, filepath, name): 
         self.recorder = recorder(filepath)
+        self.filepath = filepath
         self.name = name
         self.last_updated = 0
         
     @abstractmethod
     def run(self): 
         pass
+    
+    def save(self, fig, filename): 
+        fig .savefig(fname = self.image_src + filename + self.image_extension)
     
     def _plot_2d_hist(self,
                       df: pd.DataFrame,
@@ -70,8 +77,7 @@ class Analysis(object):
         ax.set_xlabel(x_column) 
         ax.set_ylabel(y_column) 
         
-        plt.show()
-        return 
+        return fig
     
     def _plot_1d_hist(self, x_column: str, x_bin_nr: int=100): 
         
@@ -91,6 +97,5 @@ class Analysis(object):
         # Add descriptions
         plt.title(f"Histogram of {x_column}.")
         ax.set_xlabel(x_column) 
-        
-        plt.show()
-        return 
+
+        return fig

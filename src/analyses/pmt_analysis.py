@@ -26,12 +26,13 @@ class PMTAnalysis(Analysis):
         df = self.recorder.get_table()
         self._2d_hist_coil_on(df)
         self._2d_hist_coil_off(df)
-        self._plot_1d_hist(x_column="timestamp", x_bin_nr=100) 
+        fig = self._plot_1d_hist(x_column="timestamp", x_bin_nr=100) 
+        self.save(fig, "PMT_Hist1D")
         return
     
     def _2d_hist_coil_on(self, df: pd.DataFrame): 
         df_coil_on = self._query_coil_on(df)
-        self._plot_2d_hist(
+        fig = self._plot_2d_hist(
             df=df_coil_on,
             setting="Coil on",
             x_column="timestamp", 
@@ -43,11 +44,12 @@ class PMTAnalysis(Analysis):
             y_min_percentile=5.0,
             y_max_percentile=95.0
             )
+        self.save(fig, "PMT_Hist2D_Coil_on")
         return
 
     def _2d_hist_coil_off(self, df: pd.DataFrame): 
         df_coil_off = self._query_coil_off(df)
-        self._plot_2d_hist(
+        fig = self._plot_2d_hist(
             df=df_coil_off,
             setting="Coil off",
             x_column="timestamp", 
@@ -59,6 +61,7 @@ class PMTAnalysis(Analysis):
             y_min_percentile=5.0,
             y_max_percentile=95.0
             )
+        self.save(fig, "PMT_Hist2D_Coil_off")
         return
     
     def _query_coil_off(self, df: pd.DataFrame): 
