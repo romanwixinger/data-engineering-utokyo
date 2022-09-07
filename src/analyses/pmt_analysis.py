@@ -20,16 +20,15 @@ from analyses.analysis import Analysis
 class PMTAnalysis(Analysis): 
     
     def __init__(self, filepath: str): 
-        super(PMTAnalysis, self).__init__(PMTRecorder, filepath, "PMT Analysis") 
+        super(PMTAnalysis, self).__init__(PMTRecorder, filepath, "PMT Analysis")
     
-    def run(self): 
-        df = self.recorder.get_table()
+    def _run_analysis(self, df): 
         self._2d_hist_coil_on(df)
         self._2d_hist_coil_off(df)
         fig = self._plot_1d_hist(x_column="timestamp", x_bin_nr=100) 
         self.save(fig, "PMT_Hist1D")
         return
-    
+        
     def _2d_hist_coil_on(self, df: pd.DataFrame): 
         df_coil_on = self._query_coil_on(df)
         fig = self._plot_2d_hist(

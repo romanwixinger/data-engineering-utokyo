@@ -10,6 +10,8 @@ SSD Analysis -> Histogram
 import sys
 sys.path.insert(0,'..')
 
+import pandas as pd
+
 from recorders.ssd_recorder import SSDRecorder
 from analyses.analysis import Analysis
     
@@ -19,9 +21,7 @@ class SSDAnalysis(Analysis):
     def __init__(self, filepath: str): 
         super(SSDAnalysis, self).__init__(SSDRecorder, filepath, "SSD Analysis") 
     
-    def run(self): 
-        df = self.recorder.get_table()
-        
+    def _run_analysis(self, df: pd.DataFrame):
         fig = self._plot_2d_hist(
             df=df, 
             setting="",
@@ -36,8 +36,6 @@ class SSDAnalysis(Analysis):
         self.save(fig, "SSD_Hist1D")
         return
     
-    
-
     
 if __name__ == '__main__': 
     

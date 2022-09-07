@@ -27,12 +27,28 @@ class Analysis(object):
         self.name = name
         self.last_updated = 0
         
-    @abstractmethod
     def run(self): 
-        pass
+        if self.is_up_to_date():
+            return
+        df = self.recorder.get_table()
+        self.last_updated = self.recorder.last_updated
+        self._run_analysis(df)
+        return
     
     def save(self, fig, filename): 
-        fig .savefig(fname = self.image_src + filename + self.image_extension)
+        fig.savefig(fname = self.image_src + filename + self.image_extension)
+        
+    def is_up_to_date(self): 
+        return all((
+            self.recorder.table_is_up_to_date(),
+            self.last_updated == self.recorder.last_updated
+            ))
+    
+    @classmethod
+    def _run_analysis(self): 
+        """ Methods which executes the plotting and saving. 
+        """
+        pass
     
     def _plot_2d_hist(self,
                       df: pd.DataFrame,
