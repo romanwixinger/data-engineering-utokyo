@@ -10,7 +10,6 @@ assign this instance to loc, such that your other scripts use your settings.
 
 class Locations(): 
     
-    @classmethod
     def __init__(self, 
                  location: str="",
                  ssd: str="",
