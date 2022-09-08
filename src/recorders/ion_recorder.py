@@ -24,14 +24,13 @@ from recorders.recorder import Recorder
 
 class IonRecorder(Recorder): 
     
-    def __init__(self, filepath: str):
-        super(IonRecorder, self).__init__(filepath, False)
+    def __init__(self, filepath: str, always_update: bool=False):
+        super(IonRecorder, self).__init__(
+            filepath=filepath, 
+            has_metadata=False, 
+            always_update=always_update
+            )
 
-    def _load_new_data(self): 
-        df = pd.read_csv(filepath_or_buffer=self.filepath, skiprows=self.read_data_lines)
-        self.read_data_lines += len(df.index)
-        return df
-    
     def _harmonize_time(self): 
         self._table_df["datetime"] = pd.to_datetime(self._table_df["Timestamp"])
         self._table_df["datetime_μs"] = self._table_df["Timestamp"].apply(lambda s: s+".000000")

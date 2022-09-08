@@ -23,10 +23,16 @@ class Recorder(object):
     """ Base class for mapping a csv file to a pandas dataframe in real-time when it changes. 
     """
     
-    def __init__(self, filepath: str, has_metadata: bool=True): 
+    def __init__(self, 
+                 filepath: str, 
+                 has_metadata: bool=True, 
+                 delimiter: str=",", 
+                 always_update: bool=False): 
         # Settings
         self.filepath = filepath
         self.has_metadata = has_metadata
+        self.delimiter = delimiter
+        self.always_update = always_update
         
         # Tracking
         self.read_data_lines = 0
@@ -68,7 +74,7 @@ class Recorder(object):
         return self.metadata_last_updated == self._get_mod_time()
     
     def _update(self): 
-        if self.table_is_up_to_date(): 
+        if self.table_is_up_to_date() and not self.always_update: 
             return 
         
         # Merge with metadata
@@ -83,7 +89,7 @@ class Recorder(object):
         self._harmonize_time()
         self._table_df = self._table_df.sort_values(by="timestamp")
         self.last_updated = self._get_mod_time()
-        
+    
     def _get_mod_time(self): 
         return time.ctime(os.path.getmtime(self.filepath))
         
@@ -93,11 +99,14 @@ class Recorder(object):
         
         # Case first loading 
         if self.read_data_lines == 0: 
-            self._data_df = self._load_new_data()
+            self._data_df = self._load_initial_data()
+            self._data_columns = list(self._data_df.columns) 
+            self.read_data_lines += len(self._data_df.index)
             return 
         
         # Case reloading
         new_data_df = self._load_new_data()
+        self.read_data_lines += len(new_data_df.index)
         if len(new_data_df.index) == 0: 
             return
 
@@ -109,10 +118,12 @@ class Recorder(object):
             ignore_index=True,
             copy=True
         )
+        
         return
     
     def _update_metadata(self): 
-        self._metadata_df = self._load_metadata() if not self.metadata_is_up_to_date() else self._metadata_df
+        if not self.metadata_is_up_to_date() or self.always_update: 
+            self._metadata_df = self._load_metadata()
         return
     
     def _timestamp_to_datetimes(self, df: pd.DataFrame): 
@@ -131,11 +142,26 @@ class Recorder(object):
         return
     
     @abstractmethod
+    def _load_initial_data(self) -> pd.DataFrame: 
+        """ Returns all data up to now and defines the data columns. 
+            Is only executed once.
+        """
+        return pd.read_csv(
+            filepath_or_buffer=self.filepath, 
+            delimiter=self.delimiter
+            )
+    
+    @abstractmethod
     def _load_new_data(self) -> pd.DataFrame: 
         """ Returns the rows which have not been loaded so far. 
         """
-    
-        pass
+        return pd.read_csv(
+            filepath_or_buffer=self.filepath, 
+            skiprows=self.read_data_lines,
+            header=0,
+            names=self._data_columns,
+            delimiter=self.delimiter
+            )
     
     @abstractmethod
     def _load_metadata(self) -> pd.DataFrame: 

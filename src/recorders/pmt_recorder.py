@@ -20,25 +20,20 @@ from constants import loc
 
 class PMTRecorder(Recorder): 
     
-    def __init__(self, filepath: str, has_metadata: bool=False):
-        super(PMTRecorder, self).__init__(filepath, has_metadata)
-    
-    def _load_new_data(self): 
-        
-        # First time 
-        if self.read_data_lines == 0: 
-            df = pd.read_csv(filepath_or_buffer=self.filepath, skiprows=self.read_data_lines)
-            df = df.drop(["Unnamed: 5"], axis=1)
-
-        # Later time 
-        else: 
-            df = pd.read_csv(
-                filepath_or_buffer=self.filepath, 
-                skiprows=self.read_data_lines, 
-                names=self._data_df.columns
+    def __init__(self, 
+                 filepath: str, 
+                 has_metadata: bool=False, 
+                 always_update: bool=False):
+        super(PMTRecorder, self).__init__(
+            filepath=filepath, 
+            has_metadata=has_metadata, 
+            delimiter=",",
+            always_update=always_update
             )
-        self.read_data_lines += len(df.index)
-        return df
+        
+    def _load_initial_data(self): 
+        df = pd.read_csv(filepath_or_buffer=self.filepath)
+        return df.drop(["Unnamed: 5"], axis=1)
     
     def _harmonize_time(self):
         

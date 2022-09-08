@@ -20,13 +20,13 @@ from recorders.recorder import Recorder
 
 class CoilRecorder(Recorder): 
        
-    def __init__(self, filepath: str):
-        super(CoilRecorder, self).__init__(filepath, False)
-    
-    def _load_new_data(self): 
-        df = pd.read_csv(filepath_or_buffer=self.filepath, delimiter="	", skiprows=self.read_data_lines)
-        self.read_data_lines += len(df.index)
-        return df
+    def __init__(self, filepath: str, always_update: bool=False):
+        super(CoilRecorder, self).__init__(
+            filepath=filepath, 
+            has_metadata=False, 
+            delimiter="	",
+            always_update=always_update
+            )
     
     def _harmonize_time(self): 
         self._table_df["datetime_μs"] = self._table_df["Time"].apply(lambda s: s+"000")

@@ -19,20 +19,20 @@ from recorders.recorder import Recorder
 
 class GaugeRecorder(Recorder): 
     
-    def __init__(self, filepath: str):
-        super(GaugeRecorder, self).__init__(filepath, False)
-    
-    def _load_new_data(self): 
-        if self.read_data_lines == 0:
-            df = pd.read_csv(filepath_or_buffer=self.filepath)
-            self._data_columns = list(df.columns)
-        else:
-            df = pd.read_csv(filepath_or_buffer=self.filepath,
-                             skiprows=self.read_data_lines,
-                             header=0,
-                             names=self._data_columns)
-        self.read_data_lines += len(df.index)
-        return df
+    def __init__(self, filepath: str, always_update: bool=False):
+        super(GaugeRecorder, self).__init__(
+            filepath=filepath, 
+            has_metadata=False, 
+            delimiter=",",
+            always_update=always_update
+            )
+        
+    def _load_initial_data(self): 
+        return pd.read_csv(
+            filepath_or_buffer=self.filepath, 
+            header=0, 
+            names=["Timestamp", "Rb disp.", "Neut.","Surf. Ref.","NC1","NC2","NC3"]
+            )  
     
     def _harmonize_time(self): 
         self._table_df["datetime"] = pd.to_datetime(self._table_df["Timestamp"])

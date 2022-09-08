@@ -21,18 +21,26 @@ from recorders.recorder import Recorder
 class HeaterRecorder(Recorder): 
     """ Class for data engineering of the heater data. """
     
-    def __init__(self, filepath: str):
-        super(HeaterRecorder, self).__init__(filepath, True)
+    def __init__(self, filepath: str, always_update: bool=False):
+        super(HeaterRecorder, self).__init__(
+            filepath=filepath, 
+            has_metadata=True,
+            delimiter=",",
+            always_update=always_update
+            )
         self.nr_meta_data_rows = 6
+        
+    def _load_initial_data(self) -> pd.DataFrame: 
+        return self._load_new_data()
     
     def _load_new_data(self) -> pd.DataFrame:  
-        df = pd.read_csv(filepath_or_buffer=self.filepath, 
-                                 skiprows=self.nr_meta_data_rows+self.read_data_lines-1, 
-                                 header=0, 
-                                 names=["Date", "Time", "Unknown", "TargetPercentage", "MeasuredPercentage"],
-                                 encoding="utf-8")
-        self.read_data_lines += len(df.index)
-        return df
+        return pd.read_csv(
+            filepath_or_buffer=self.filepath, 
+            skiprows=self.nr_meta_data_rows - 1 +self.read_data_lines, 
+            header=0, 
+            names=["Date", "Time", "Unknown", "TargetPercentage", "MeasuredPercentage"],
+            encoding="utf-8"
+            )
     
     def _load_metadata(self): 
         with open(self.filepath, newline='', encoding="utf-8") as f:

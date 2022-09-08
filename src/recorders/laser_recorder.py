@@ -19,19 +19,33 @@ from recorders.recorder import Recorder
 
 class LaserRecorder(Recorder): 
     
-    def __init__(self, filepath: str): 
-        super(LaserRecorder, self).__init__(filepath, True)
-        self._data_columns = []
-        self._metadata_columns = []
+    def __init__(self, filepath: str, always_update: bool=False): 
+        super(LaserRecorder, self).__init__(
+            filepath=filepath, 
+            has_metadata=True,
+            always_update=always_update
+            )
+        
+    def _load_initial_data(self):
+        df = pd.read_csv(
+            filepath_or_buffer=self.filepath, 
+            skiprows=119,
+            delimiter="	"
+            )
+        df = self._aggregate_laser_rows(df)
+        self.read_data_lines += 5 * len(df.index)
+        return df
     
-    def _load_new_data(self):
-        """ Loads the data and makes sure that each row has all laser measurements by aggregating rows. """
-        original_df = pd.read_csv(filepath_or_buffer=self.filepath, 
-                                  skiprows=119+self.read_data_lines,
-                                  delimiter="	")
-        self.read_data_lines += len(original_df.index)
-        df = self._aggregate_laser_rows(original_df)
-        self._data_columns = list(df.columns) 
+    def _load_new_data(self): 
+        df = pd.read_csv(
+            filepath_or_buffer=self.filepath, 
+            skiprows=119+self.read_data_lines,
+            delimiter="	",
+            header=0,
+            names=self._data_columns
+            )
+        df = self._aggregate_laser_rows(df)
+        self.read_data_lines += 5 * len(df.index)
         return df
 
     def _aggregate_laser_rows(self, original_df: pd.DataFrame): 
@@ -55,9 +69,10 @@ class LaserRecorder(Recorder):
                 row_list.append(item)
                 row_lookup = {}
 
-        return pd.DataFrame(data=row_list, columns=original_df.columns)
+        df = pd.DataFrame(data=row_list, columns=original_df.columns)
+        return df
         
-    def _load_metadata(self): 
+    def _load_metadata(self):     
         with open(self.filepath, newline='', encoding="cp932") as f:
             reader = csv.reader(f, delimiter="	")
             metadata_list = list(reader)[:119]
@@ -95,9 +110,7 @@ class LaserRecorder(Recorder):
             
             columns = title_column + gi_columns + gs_columns + frame_columns
             row = title_row + gi_rows + gs_rows + frame_rows
-            metadata_df = pd.DataFrame(data=[row], columns=columns)
-            self._metadata_columns = list(metadata_df.columns) 
-            return metadata_df
+            return pd.DataFrame(data=[row], columns=columns)
     
     def _combine(self, entries: list): 
         """ If entries has length 1, then it returns the entry. 
@@ -126,8 +139,4 @@ class LaserRecorder(Recorder):
         self._table_df["timestamp"] = helper_df["timestamp"]
         self._timestamp_to_datetimes(self._table_df)
         
-        # Create data and metadata table
-        self._data_df = self._table_df[self._data_columns]
-        self._metadata_df = self._table_df[self._metadata_columns]
-                
         return
