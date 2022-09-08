@@ -44,6 +44,7 @@ class Helper():
     def get_nr_of_rows(cls, df: pd.DataFrame): 
         return len(df.index)
 
+
 class TestRecorders(unittest.TestCase): 
         
     def test_init(self): 
