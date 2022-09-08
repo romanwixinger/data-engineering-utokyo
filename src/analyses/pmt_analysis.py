@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0,'..')
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from recorders.pmt_recorder import PMTRecorder
 from analyses.analysis import Analysis
@@ -20,7 +21,7 @@ from analyses.analysis import Analysis
 class PMTAnalysis(Analysis): 
     
     def __init__(self, filepath: str): 
-        super(PMTAnalysis, self).__init__(PMTRecorder, filepath, "PMT Analysis")
+        super(PMTAnalysis, self).__init__(PMTRecorder(filepath), filepath, "PMT Analysis")
     
     def _run_analysis(self, df): 
         self._2d_hist_coil_on(df)

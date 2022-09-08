@@ -19,7 +19,7 @@ from analyses.analysis import Analysis
 class SSDAnalysis(Analysis): 
     
     def __init__(self, filepath: str): 
-        super(SSDAnalysis, self).__init__(SSDRecorder, filepath, "SSD Analysis") 
+        super(SSDAnalysis, self).__init__(SSDRecorder(filepath), filepath, "SSD Analysis") 
     
     def _run_analysis(self, df: pd.DataFrame):
         fig = self._plot_2d_hist(

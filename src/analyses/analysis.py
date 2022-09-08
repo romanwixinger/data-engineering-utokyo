@@ -22,7 +22,7 @@ class Analysis(object):
     image_extension = ".png"
     
     def __init__(self, recorder, filepath, name): 
-        self.recorder = recorder(filepath)
+        self.recorder = recorder
         self.filepath = filepath
         self.name = name
         self.last_updated = 0
