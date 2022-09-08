@@ -23,13 +23,20 @@ class GaugeRecorder(Recorder):
         super(GaugeRecorder, self).__init__(filepath, False)
     
     def _load_new_data(self): 
-        df = pd.read_csv(filepath_or_buffer=self.filepath, skiprows=self.read_data_lines)
+        if self.read_data_lines == 0:
+            df = pd.read_csv(filepath_or_buffer=self.filepath)
+            self._data_columns = list(df.columns)
+        else:
+            df = pd.read_csv(filepath_or_buffer=self.filepath,
+                             skiprows=self.read_data_lines,
+                             header=0,
+                             names=self._data_columns)
         self.read_data_lines += len(df.index)
         return df
     
     def _harmonize_time(self): 
         self._table_df["datetime"] = pd.to_datetime(self._table_df["Timestamp"])
-        self._table_df["datetime_μs"] = self._table_df["Timestamp"].apply(lambda s: s+".000000")
-        self._table_df["datetime_ms"] = self._table_df["Timestamp"].apply(lambda s: s+".000")
+        self._table_df["datetime_μs"] = self._table_df["Timestamp"].apply(lambda s: str(s)+".000000")
+        self._table_df["datetime_ms"] = self._table_df["Timestamp"].apply(lambda s: str(s)+".000")
         self._table_df["timestamp"] = self._table_df["datetime"].values.astype(np.int64)
         return 

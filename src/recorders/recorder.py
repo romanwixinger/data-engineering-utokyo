@@ -38,6 +38,7 @@ class Recorder(object):
         self._table_df = None     # Data x Metadata
         self._data_df = None      # Data
         self._metadata_df = None  # Metadata
+        self._data_columns = []
 
     def get_table(self) -> pd.DataFrame: 
         self._update()
