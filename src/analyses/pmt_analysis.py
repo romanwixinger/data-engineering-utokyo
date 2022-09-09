@@ -12,7 +12,6 @@ import sys
 sys.path.insert(0,'..')
 
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from recorders.pmt_recorder import PMTRecorder
 from analyses.analysis import Analysis

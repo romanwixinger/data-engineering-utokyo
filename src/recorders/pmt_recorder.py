@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 
 from recorders.recorder import Recorder
-from constants import loc
 
 
 class PMTRecorder(Recorder): 

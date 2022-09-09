@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import os
-
 import sys
 sys.path.insert(0,'..')
 
 import unittest
 import pandas as pd
-import shutil
-import csv
 
 from constants import unittest_loc
 

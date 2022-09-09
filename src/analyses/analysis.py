@@ -44,7 +44,7 @@ class Analysis(object):
             self.last_updated == self.recorder.last_updated
             ))
     
-    @classmethod
+    @abstractmethod
     def _run_analysis(self): 
         """ Methods which executes the plotting and saving. 
         """
