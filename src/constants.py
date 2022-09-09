@@ -49,17 +49,30 @@ roman_loc = Locations(
     )
 
 # Unittest settings
-unittest_loc = Locations(
+unittest_short_loc = Locations(
     location="../../data/unittest/", 
-    ssd="../../data/unittest/"+"ssd.csv",
-    pmt="../../data/unittest/"+"pmt.csv", 
-    coil="../../data/unittest/"+"coil.txt", 
-    heater="../../data/unittest/"+"heater.csv",
-    ion="../../data/unittest/"+"ion.csv", 
-    gauge="../../data/unittest/"+"gauge.csv", 
-    laser="../../data/unittest/"+"laser.lta", 
-    image="../../data/unittest/"+"image.csv"
+    ssd="../../data/unittest/"+"ssd_short.csv",
+    pmt="../../data/unittest/"+"pmt_short.csv", 
+    coil="../../data/unittest/"+"coil_short.txt", 
+    heater="../../data/unittest/"+"heater_short.csv",
+    ion="../../data/unittest/"+"ion_short.csv",
+    gauge="../../data/unittest/"+"gauge_short.csv", 
+    laser="../../data/unittest/"+"laser_short.lta", 
+    image="../../data/unittest/"+"image_short.csv"
     )
+unittest_long_loc = Locations(
+    location="../../data/unittest/", 
+    ssd="../../data/unittest/"+"ssd_long.csv",
+    pmt="../../data/unittest/"+"pmt_long.csv", 
+    coil="../../data/unittest/"+"coil_long.txt", 
+    heater="../../data/unittest/"+"heater_long.csv",
+    ion="../../data/unittest/"+"ion_long.csv",
+    gauge="../../data/unittest/"+"gauge_long.csv", 
+    laser="../../data/unittest/"+"laser_long.lta", 
+    image="../../data/unittest/"+"image_long.csv"
+    )
+
+
 
 # Remote settings
 remote_loc = Locations(

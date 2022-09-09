@@ -80,4 +80,3 @@ class SSDRecorder(Recorder):
             return df
         
         self._table_df = harmonize_table(self._table_df)
-        self._data_df = self._table_df[self._data_df.columns]

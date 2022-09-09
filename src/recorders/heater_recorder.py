@@ -31,19 +31,29 @@ class HeaterRecorder(Recorder):
         self.nr_meta_data_rows = 6
         
     def _load_initial_data(self) -> pd.DataFrame: 
-        return self._load_new_data()
-    
-    def _load_new_data(self) -> pd.DataFrame:  
         return pd.read_csv(
             filepath_or_buffer=self.filepath, 
-            skiprows=self.nr_meta_data_rows - 1 +self.read_data_lines, 
+            skiprows=self.nr_meta_data_rows - 1, 
             header=0, 
             names=["Date", "Time", "Unknown", "TargetPercentage", "MeasuredPercentage"],
-            encoding="utf-8"
+            encoding='Shift-JIS',
+            delimiter=self.delimiter
+            )
+    
+    def _load_new_data(self) -> pd.DataFrame: 
+        """ Returns the rows which have not been loaded so far. 
+        """
+        return pd.read_csv(
+            filepath_or_buffer=self.filepath, 
+            skiprows=self.nr_meta_data_rows + self.read_data_lines - 1, 
+            header=0, 
+            names=["Date", "Time", "Unknown", "TargetPercentage", "MeasuredPercentage"],
+            encoding='Shift-JIS',
+            delimiter=self.delimiter
             )
     
     def _load_metadata(self): 
-        with open(self.filepath, newline='', encoding="utf-8") as f:
+        with open(self.filepath, newline='', encoding="Shift-JIS") as f:
             reader = csv.reader(f)
             metadata_list = list(reader)[:self.nr_meta_data_rows]
             columns = [m[0] for m in metadata_list]
@@ -56,8 +66,3 @@ class HeaterRecorder(Recorder):
         self._table_df["datetime_ms"] = self._table_df["datetime"].apply(lambda s: s+".000")
         self._table_df["timestamp"] = self._table_df["datetime_ms"].apply(pd.Timestamp).values.astype(np.int64)
         
-        # Create sub tables
-        self._data_df = self._table_df[list(self._data_df.columns) + ["datetime", "datetime_μs", "datetime_ms", "timestamp"]]
-        self._metadata_df = self._table_df[list(self._metadata_df.columns)]
-        
-        return

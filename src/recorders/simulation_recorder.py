@@ -63,5 +63,4 @@ class SimulationRecorder(Recorder):
         dfs = dfs + [pd.DataFrame(data=[time.time() for i in range(self.rows)], columns=["timestamp"])]
         df = pd.concat(dfs, axis=1)
         df.to_csv(self.filepath)
-        return
       
