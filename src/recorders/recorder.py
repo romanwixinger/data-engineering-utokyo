@@ -37,8 +37,6 @@ class Recorder(object):
         # Tracking
         self.read_data_lines = 0
         self.last_updated = 0
-        self.data_last_updated = 0
-        self.metadata_last_updated = 0
         
         # Dataframes 
         self._table_df = None     # Data x Metadata
@@ -57,24 +55,17 @@ class Recorder(object):
         return self._data_df
     
     def get_metadata(self) -> pd.DataFrame:
-        if not self.has_metadata: 
-            return pd.DataFrame()
-        self._update_metadata()
-        self.metadata_last_updated = self._get_mod_time()
-        self.metadata_columns = list(self._metadata_df.columns) if self._metadata_df is not None else []
+        self._metadata_df = self._load_metadata() if self.has_metadata else pd.DataFrame()
         return self._metadata_df
     
-    def table_is_up_to_date(self) -> bool:
+    def is_up_to_date(self) -> bool:
         return self.last_updated == self._get_mod_time()
     
-    def data_is_up_to_date(self) -> bool: 
-        return self.data_last_updated == self._get_mod_time()
-    
-    def metadata_is_up_to_date(self) -> bool: 
-        return self.metadata_last_updated == self._get_mod_time()
+    def _get_mod_time(self): 
+        return time.ctime(os.path.getmtime(self.filepath))
     
     def _update(self): 
-        if self.table_is_up_to_date() and not self.always_update: 
+        if self.is_up_to_date() and not self.always_update: 
             return 
         
         # Merge with metadata
@@ -89,9 +80,6 @@ class Recorder(object):
         self._harmonize_time()
         self._table_df = self._table_df.sort_values(by="timestamp")
         self.last_updated = self._get_mod_time()
-    
-    def _get_mod_time(self): 
-        return time.ctime(os.path.getmtime(self.filepath))
         
     def _update_data(self):
         """ Updates self._data_df and self.data_last_updated incrementally. Makes use of _load_new_data(). 
@@ -118,13 +106,6 @@ class Recorder(object):
             ignore_index=True,
             copy=True
         )
-        
-        return
-    
-    def _update_metadata(self): 
-        if not self.metadata_is_up_to_date() or self.always_update: 
-            self._metadata_df = self._load_metadata()
-        return
     
     def _timestamp_to_datetimes(self, df: pd.DataFrame): 
         """ Takes a pandas dataframe with a timestamp column (int) and also adds date datetime, datetime_ms, datetime_μs. 
@@ -138,13 +119,10 @@ class Recorder(object):
         df["datetime_μs"] = df["timestamp"].apply(conversion_to_datetime_μs)
         df["datetime_ms"] = df["timestamp"].apply(conversion_to_datetime_ms)
         df["datetime"] = df["timestamp"].apply(conversion_to_datetime)
-
-        return
     
     @abstractmethod
     def _load_initial_data(self) -> pd.DataFrame: 
         """ Returns all data up to now and defines the data columns. 
-            Is only executed once.
         """
         return pd.read_csv(
             filepath_or_buffer=self.filepath, 
@@ -165,7 +143,7 @@ class Recorder(object):
     
     @abstractmethod
     def _load_metadata(self) -> pd.DataFrame: 
-        """ Returns the current version of the metadata by reloading everything. 
+        """ Reloads all metadata. 
         """
         pass
     
