@@ -36,15 +36,7 @@ class PMTRecorder(Recorder):
         return df.drop(["Unnamed: 5"], axis=1)
     
     def _harmonize_time(self):
-        
-        # Harmonize table
         self._table_df["datetime_μs"] = self._table_df["Time"].apply(lambda s: s+"000")
         self._table_df["datetime_ms"] = self._table_df["Time"]
         self._table_df["datetime"] = self._table_df["Time"].apply(lambda s: s[:-4])
         self._table_df["timestamp"] = self._table_df["Time"].apply(pd.Timestamp).values.astype(np.int64)
-        
-        # Create sub tables
-        self._data_df = self._table_df
-        self._metadata_df = pd.DataFrame()
-
-        return 

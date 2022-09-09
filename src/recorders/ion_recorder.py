@@ -36,4 +36,3 @@ class IonRecorder(Recorder):
         self._table_df["datetime_μs"] = self._table_df["Timestamp"].apply(lambda s: s+".000000")
         self._table_df["datetime_ms"] = self._table_df["Timestamp"].apply(lambda s: s+".000")
         self._table_df["timestamp"] = self._table_df["datetime"].values.astype(np.int64)
-        return

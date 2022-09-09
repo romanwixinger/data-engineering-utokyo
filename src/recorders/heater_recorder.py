@@ -56,8 +56,3 @@ class HeaterRecorder(Recorder):
         self._table_df["datetime_ms"] = self._table_df["datetime"].apply(lambda s: s+".000")
         self._table_df["timestamp"] = self._table_df["datetime_ms"].apply(pd.Timestamp).values.astype(np.int64)
         
-        # Create sub tables
-        self._data_df = self._table_df[list(self._data_df.columns) + ["datetime", "datetime_μs", "datetime_ms", "timestamp"]]
-        self._metadata_df = self._table_df[list(self._metadata_df.columns)]
-        
-        return
