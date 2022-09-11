@@ -1,3 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 16:37:36 2022
+
+@author: Shintaro Nagase (nagase@cns.s.u-tokyo.ac.jp) 
+@co-author: Roman Wixinger (roman.wixinger@gmail.com)
+
+Extraction of the MOT number from SSD images. 
+
+Sources: 
+- https://rikei-fufu.com/2020/07/05/post-3270-fitting/
+"""
+
+import sys
+sys.path.insert(0,'..')
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
@@ -5,149 +21,178 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-# 参考：https://rikei-fufu.com/2020/07/05/post-3270-fitting/
-# メモ：上記サイトにはフィッティングパラメータの初期値を入れていないが、オーダーを合わせた初期値を入れないとうまくフィッティングできない。下記コードには初期値『p0』を入力した。
+import mot_constants as c
 
-def fitting_2DGauss(data):
-    def two_D_gauss(X, A, sigma_x, sigma_y, mu_x, mu_y, C): # 2D Gaussian
-        x, y = X #説明変数(独立変数)を分離する。
-        z = (A *Cell_xsize*Cell_ysize / (2*np.pi*np.sqrt(sigma_x**2*sigma_y**2))) * np.exp(-(x-mu_x)**2/(2*sigma_x**2)) * np.exp(-(y-mu_y)**2/(2*sigma_y**2)) + C
 
-        return z
+def load(url): 
+    return pd.read_excel(url, index_col=None, header=None)
 
-    def plot_fit_result(data, fit_result):
-        #グラフの枠を作っていく
-        fig = plt.figure()
-        ax = Axes3D(fig)
+def preprocess(df: pd.DataFrame, mode: str): 
+    """ Takes the ssd image data as pandas dataframe and converts into 
+        numpy arrays. The unit is converted using a scaling factor which is 
+        applied to the z values. The scaling factor can be determined from the
+        mode, which is either 'power' or 'mot number'. 
+    """
+    
+    x_data = np.array([np.arange(c.Xmin, c.Xmax)] * c.Ynum).reshape(-1) * c.Cell_xsize * c.b
+    y_data= np.repeat(np.arange(c.Ymin, c.Ymax), c.Xnum) * c.Cell_ysize * c.b
 
-        #描画
-        ax.plot(data["x"],data["y"],data["z"], ms=3, marker="o",linestyle='None', c="blue")         #実測データ値は散布図でplot
-        ax.plot_wireframe(fit_result["x"],fit_result["y"],fit_result["z"], rstride=10, cstride=10)  #fitting結果は面(ワイヤーフレーム)でplot
-        ax.set_xlabel('X (m)')
-        ax.set_ylabel('Y (m)')
-        ax.set_zlabel('atom number')
-        plt.savefig("Plot.png", dpi=300)        #グラフを画像データで保存
-        plt.show(block=False)                                                                       #グラフを表示
-        return 0
+    data = df.iloc[c.Ymin:c.Ymax, c.Xmin:c.Xmax]
+    
+    scaling_factor = {
+        "power": 1.0 / c.Pow_elec_coef / c.MOTnum_Pow_coef, 
+        "mot number": c.hbar * c.omega0_Rb / (c.T_exp * c.eta)
+        }[mode]
+    
+    z_data = data.to_numpy().reshape(-1) * scaling_factor
 
-    x_observed = data["x"]
-    y_observed = data["y"]
-    z_observed = data["z"]
+    data = {
+        "x": x_data,
+        "y": y_data,
+        "z": z_data
+        }
+    
+    return data
 
-    p0 = np.array([ 5000./MOTnum_Pow_coef, 50.*Cell_xsize*b, 100*Cell_ysize*b, 525.*Cell_xsize*b, 720.*Cell_ysize*b, 100.])
-    #fittingのメイン計算部分
-    popt, pcov = curve_fit(two_D_gauss, (x_observed, y_observed), z_observed, p0) #poptは最適推定値、pcovは共分散が出力される
-    perr = np.sqrt(np.diag(pcov)) #推定されたパラメータの各々の誤差
+def two_D_gauss(X: tuple, 
+                A: float, 
+                sigma_x: float, 
+                sigma_y: float, 
+                mu_x: float, 
+                mu_y: float, 
+                C: float): 
+    x, y = X 
+    z = A * c.Cell_xsize * c.Cell_ysize\
+        / (2*np.pi*np.sqrt(sigma_x**2*sigma_y**2))\
+        * np.exp(-(x-mu_x)**2/(2*sigma_x**2))\
+        * np.exp(-(y-mu_y)**2/(2*sigma_y**2))\
+        + C
 
-    #Chi2 contingency
-    o = z_observed #観測データ
-    e = two_D_gauss((x_observed, y_observed), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5]) #推定データ
-    chi2 = stats.chisquare(o, f_exp = e) #カイ自乗計算のメイン部分。chi2には[カイ二乗, p値]の2つが出力される。
+    return z
 
-    #R2 calc
-    residuals =  o - e #残渣
-    rss = np.sum(residuals**2)      #残差平方和: residual sum of squares = rss
-    tss = np.sum((o-np.mean(o))**2) #全平方和: total sum of squares = tss
-    r_squared = 1 - (rss / tss)     #決定係数R^2
+def fitting(model, data):
 
-    #fittingの結果をターミナルに表示
-    print("*Result************")
-    print("z = (A/(2*np.pi*sigma_x*sigma_y)) * np.exp(-(x-mu_x)**2/(2*sigma_x**2)) * np.exp(-(y-mu_y)**2/(2*sigma_y**2)) + C")
-    print("A = ", popt[0], "+-", perr[0])
-    print("sigma_x = ", popt[1], "+-", perr[1])
-    print("sigma_y = ", popt[2], "+-", perr[2])
-    print("mu_x = ", popt[3], "+-", perr[3])
-    print("mu_y = ", popt[4], "+-", perr[4])
-    print("C = ", popt[5], "+-", perr[5])
-    print("X-squared = ", chi2[0])
-    print("p-value = ", chi2[1])
-    print("R^2 = ", r_squared)
-    print("s_0 = ",s_0)
-    print("*******************")
-    statistics_numbers = {  "X-squared": chi2[0],
-                            "p-value": chi2[1],
-                            "R^2": r_squared}
+    # Extraction
+    x = data["x"]
+    y = data["y"]
+    z = data["z"]
 
-    #グラフ用に、fittingの結果を示す曲面を作成
+    # Initial guess for fit parameters
+    p0 = np.array([5000., 
+                   50. * c.Cell_xsize * c.b, 
+                   100 * c.Cell_ysize * c.b, 
+                   525.*c.Cell_xsize*c.b, 
+                   720.*c.Cell_ysize*c.b, 
+                   100.])
+    
+    # Fitting: popt is the best estimate, pcov is the covariance output
+    popt, pcov = curve_fit(two_D_gauss, (x, y), z, p0)
+    perr = np.sqrt(np.diag(pcov)) # Error for each of the estimated parameters
+
+    # Chi2 contingency
+    o = z                                                                           # Observed data
+    e = two_D_gauss((x, y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])   # Estimated data
+    e_normalized = e * sum(o) / sum(e)                                              # Normalize estimate such that chi2 estimation works
+    chi2 = stats.chisquare(o, f_exp = e_normalized) # Chi2 outputs two [chi-square, p-value].
+
+    # R2 calculation
+    residuals =  o - e              # Residual
+    rss = np.sum(residuals**2)      # Residual sum of squares = rss
+    tss = np.sum((o-np.mean(o))**2) # Total sum of squares = tss
+    r_squared = 1 - (rss / tss)     # Coefficient of determination R^2
+    
+    # Save as dict
+    statistics = {
+        "X-squared": chi2[0],
+        "p-value": chi2[1],
+        "R^2": r_squared,
+        "popt": popt, 
+        "pcov": pcov,
+        "perr": perr,
+        "chi2": chi2,
+        "r_squared": r_squared
+        }
+    
+    return statistics
+    
+def generate_fit_data(data, statistics: dict): 
+    # Extract fit parameters
+    popt = statistics["popt"]
+
+    # Create a surface showing the result of fitting for a graph
     fit_x = np.linspace(min(data["x"]), max(data["x"]), 200)
     fit_y = np.linspace(min(data["y"]), max(data["y"]), 200)
     X, Y = np.meshgrid(fit_x, fit_y)
+    
+    # Evaluate the fitted model on the grid
     fit_z = two_D_gauss((X, Y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])
-    fit_result={"x":X, "y":Y, "z":fit_z}
+    
+    # Convert the fit into the same format as the data
+    fit_data = {"x": X, "y": Y, "z": fit_z}
+    return fit_data
 
-    #グラフでfitting結果を表示
-    plot_fit_result(data, fit_result)
+def plot_fit_result(data, fit_data, url, mode: str):
+    """ Plots the 3d data and the fit. Saves the image to the url. 
+    """
+    # Setup figure
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    
+    # Plot measured data 
+    ax.plot(data["x"], 
+            data["y"], 
+            data["z"], 
+            ms=3, 
+            marker="o",
+            linestyle='None', 
+            c="blue")   
 
-    return popt[0], popt[1], popt[2], popt[3], popt[4], popt[5], statistics_numbers
+    # FPlot fitted data       
+    ax.plot_wireframe(fit_data["x"], 
+                      fit_data["y"], 
+                      fit_data["z"], 
+                      rstride=10, 
+                      cstride=10)
+        
+    # Labels
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_zlabel('Power (W)' if mode=="power" else 'atom number')
+    
+    # Save image
+    plt.savefig(url, dpi=300)
+    plt.show(block=False)
+
+def print_stats(statistics: dict):
+    
+    print(" Result ***********")
+    print("z = (A/(2*np.pi*sigma_x*sigma_y)) * np.exp(-(x-mu_x)**2/(2*sigma_x**2)) * np.exp(-(y-mu_y)**2/(2*sigma_y**2)) + C")
+    print("A = ", statistics["popt"][0], "+-", statistics["perr"][0])
+    print("sigma_x = ", statistics["popt"][1], "+-", statistics["perr"][1])
+    print("sigma_y = ", statistics["popt"][2], "+-", statistics["perr"][2])
+    print("mu_x = ", statistics["popt"][3], "+-", statistics["perr"][3])
+    print("mu_y = ", statistics["popt"][4], "+-", statistics["perr"][4])
+    print("C = ", statistics["popt"][5], "+-", statistics["perr"][5])
+    print("X-squared = ", statistics["chi2"][0])
+    print("p-value = ", statistics["chi2"][1])
+    print("R^2 = ", statistics["r_squared"])
+    print("*******************")
+    
 
 if __name__=="__main__":
-
-    # 物理定数
     
-    hbar = 1.054571817 * 10**(-34)  # 換算プランク定数 (Js)
-    c = 299792458   # 光速 (m/s)
-
-    # CCDの特性   
-    Cell_xsize = 6.45 * 10**(-6)   # CCD Cell x size (m)
-    Cell_ysize = 6.45 * 10**(-6)   # CCD Cell y size (m)
-    T_exp = 50 * 10**(-6)   # 露光時間
-    eta = 0.5   # 量子効率
-    b = 10/5.3277   # レンズの倍率
-
-    # 原子
-    lambda_Rb = 780 * 10**(-9)  # 蛍光波長 (m)
-    omega0_Rb = 2*np.pi*c/lambda_Rb
-    Gamma_Rb = 2*np.pi * 7.6 * 10**(6)  # 寿命 (Hz)
-    I_sat = 3.5771    # 飽和強度 (mW/cm^2)
-
-    # レーザー
-    x_power = 9 *2   # x軸光パワー (mW) 2倍は打ち返し光
-    y_power = 10 *2
-    z_power = 9 *2
-    beam_diam = 1.7  # 光ビーム直径 (cm)
-    x_intens = x_power/(np.pi*((beam_diam/2)**2))   # z軸光強度 (mW/cm^2)
-    y_intens = y_power/(np.pi*((beam_diam/2)**2))
-    z_intens = z_power/(np.pi*((beam_diam/2)**2))
-    I_beam = x_intens + y_intens + z_intens     # MOT中心光強度
-    s_0 = I_beam / I_sat    # 飽和パラメータ
-    delta = 2*np.pi * 10 * 10**(6)  # 離調 (Hz)
-    Eff_Gamma_Rb = Gamma_Rb * np.sqrt(1 + s_0)  # 有効線幅
-
-    # 立体角計算
-    VP_area = 8**2 * np.pi  # ICF34ビューポートの面積 (cm^2)
-    r_VP = 65   # MOT中心からVPまでの距離 (cm)
-    Omega_VP = VP_area / r_VP**2    # VPの立体角
-
-    # 変換式
-    Pow_elec_coef =  (T_exp*eta)/(hbar * omega0_Rb)     # パワー(W) → シグナル(electron)変換
-    MOTnum_Pow_coef = hbar*omega0_Rb*Gamma_Rb/2 * s_0/(1+s_0) * 1/(1+(2*delta/Eff_Gamma_Rb)**2) * Omega_VP/(4*np.pi)    # MOT原子数→パワー(W)変換
-
-    #入力データ(観測データ)
-    Xmin = 480
-    Xmax = 560
-    Ymin = 630
-    Ymax = 810
-    Xnum = Xmax - Xmin
-    Ynum = Ymax - Ymin
-
-    x_data = np.array([np.arange(Xmin,Xmax)]*Ynum).reshape(-1)*Cell_xsize*b
-    y_data= np.repeat(np.arange(Ymin,Ymax), Xnum)*Cell_ysize*b
-
-    all_data = pd.read_excel("C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\images\\ccd_detuning10.xlsx", index_col=None, header=None)
-    data = all_data.iloc[Ymin:Ymax, Xmin:Xmax]
-    z_data = data.to_numpy().reshape(-1) / Pow_elec_coef / MOTnum_Pow_coef
-
-    fit_data = {"x": x_data,
-                "y": y_data,
-                "z": z_data}
-#    print(fit_data["x"])
-
-    #fittingを行う関数の読み出し
-    A, sigma_x, sigma_y, mu_x, mu_y, B, statistics_numbers = fitting_2DGauss(fit_data)
-
-    #入力待機
-    Answer="n"
-    while Answer != "y":
-        print("Do you want to stop this program? (y/n)")
-        Answer = input(">> ")
-    print("End")
+    # Settings
+    mode = "mot number"
+    url = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\images\\ccd_detuning10.xlsx"
+    target = "fit.png"
+    
+    # Run
+    df = load(url=url)
+    data = preprocess(df, mode=mode)
+    statistics = fitting(model=two_D_gauss, data=data)
+    fit_data = generate_fit_data(data, statistics)
+    plot_fit_result(data, fit_data, url=target, mode=mode)
+    print_stats(statistics)
+    
+    
+    
