@@ -40,7 +40,7 @@ class Analysis(object):
         
     def is_up_to_date(self): 
         return all((
-            self.recorder.table_is_up_to_date(),
+            self.recorder.is_up_to_date(),
             self.last_updated == self.recorder.last_updated
             ))
     
