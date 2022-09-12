@@ -5,7 +5,7 @@ Created on Fri Sep  9 16:37:36 2022
 @author: Shintaro Nagase (nagase@cns.s.u-tokyo.ac.jp) 
 @co-author: Roman Wixinger (roman.wixinger@gmail.com)
 
-Extraction of the MOT number from SSD images. 
+Extraction of the MOT number and power from SSD images. 
 
 Sources: 
 - https://rikei-fufu.com/2020/07/05/post-3270-fitting/
@@ -24,8 +24,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import mot_constants as c
 
 
-def load(url): 
-    return pd.read_excel(url, index_col=None, header=None)
+def load(source: str) -> pd.DataFrame: 
+    return pd.read_excel(source, index_col=None, header=None)
 
 def preprocess(df: pd.DataFrame, mode: str): 
     """ Takes the ssd image data as pandas dataframe and converts into 
@@ -70,7 +70,8 @@ def two_D_gauss(X: tuple,
 
     return z
 
-def fitting(model, data):
+def fitting(model: callable, data: dict):
+    """ Fit the model to the data."""
 
     # Extraction
     x = data["x"]
@@ -86,12 +87,12 @@ def fitting(model, data):
                    100.])
     
     # Fitting: popt is the best estimate, pcov is the covariance output
-    popt, pcov = curve_fit(two_D_gauss, (x, y), z, p0)
+    popt, pcov = curve_fit(model, (x, y), z, p0)
     perr = np.sqrt(np.diag(pcov)) # Error for each of the estimated parameters
 
     # Chi2 contingency
     o = z                                                                           # Observed data
-    e = two_D_gauss((x, y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])   # Estimated data
+    e = model((x, y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])   # Estimated data
     e_normalized = e * sum(o) / sum(e)                                              # Normalize estimate such that chi2 estimation works
     chi2 = stats.chisquare(o, f_exp = e_normalized) # Chi2 outputs two [chi-square, p-value].
 
@@ -115,7 +116,10 @@ def fitting(model, data):
     
     return statistics
     
-def generate_fit_data(data, statistics: dict): 
+def generate_fit_data(data: dict, statistics: dict): 
+    """ Takes the x, y values of the data and the fit parameter, and returns
+        fitted z values on a x, y grid in the same format as the data. 
+    """
     # Extract fit parameters
     popt = statistics["popt"]
 
@@ -131,7 +135,7 @@ def generate_fit_data(data, statistics: dict):
     fit_data = {"x": X, "y": Y, "z": fit_z}
     return fit_data
 
-def plot_fit_result(data, fit_data, url, mode: str):
+def plot_fit_result(data: dict, fit_data: dict, target: str, mode: str):
     """ Plots the 3d data and the fit. Saves the image to the url. 
     """
     # Setup figure
@@ -160,7 +164,7 @@ def plot_fit_result(data, fit_data, url, mode: str):
     ax.set_zlabel('Power (W)' if mode=="power" else 'atom number')
     
     # Save image
-    plt.savefig(url, dpi=300)
+    plt.savefig(target, dpi=300)
     plt.show(block=False)
 
 def print_stats(statistics: dict):
@@ -178,21 +182,29 @@ def print_stats(statistics: dict):
     print("R^2 = ", statistics["r_squared"])
     print("*******************")
     
-
-if __name__=="__main__":
-    
-    # Settings
-    mode = "mot number"
-    url = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\images\\ccd_detuning10.xlsx"
-    target = "fit.png"
-    
-    # Run
-    df = load(url=url)
+def perform_analysis(source: str, target: str, mode: str): 
+    """ Loads the image data, fits a 2D gaussian model on it, generates a plot
+        of the original data and a fit, saves the plot, and returns the 
+        statistics of the fit. 
+        Source is the filepath of the original data and target is the filepath 
+        of the plot. The mode can be either 'power' or 'mot number'
+    """
+    df = load(source=source)
     data = preprocess(df, mode=mode)
     statistics = fitting(model=two_D_gauss, data=data)
     fit_data = generate_fit_data(data, statistics)
-    plot_fit_result(data, fit_data, url=target, mode=mode)
+    plot_fit_result(data, fit_data, target=target, mode=mode)
     print_stats(statistics)
+    return statistics
     
+
+if __name__=="__main__":
     
+    for i in list(range(1, 10)): 
+        for mode in ["mot number", "power"]: 
+            source = f"C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\images\\ccd_detuning0{i}.xlsx"
+            target = f"fit_{mode}_{i}.png"
+            perform_analysis(source, target, mode)
+            
+            
     
