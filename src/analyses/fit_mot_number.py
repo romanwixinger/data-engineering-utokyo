@@ -29,30 +29,32 @@ def load(source: str) -> pd.DataFrame:
 
 def preprocess(df: pd.DataFrame, mode: str): 
     """ Takes the ssd image data as pandas dataframe and converts into 
-        numpy arrays. The unit is converted using a scaling factor which is 
-        applied to the z values. The scaling factor can be determined from the
-        mode, which is either 'power' or 'mot number'. 
+        numpy arrays. Converts the unit of the z-axis. 
     """
     
+    # Reshape x, y
     x_data = np.array([np.arange(c.Xmin, c.Xmax)] * c.Ynum).reshape(-1) * c.Cell_xsize * c.b
     y_data= np.repeat(np.arange(c.Ymin, c.Ymax), c.Xnum) * c.Cell_ysize * c.b
 
-    data = df.iloc[c.Ymin:c.Ymax, c.Xmin:c.Xmax]
+    # Scale z
+    scaling_factor = get_scaling_factor(mode)
+    array = df.iloc[c.Ymin:c.Ymax, c.Xmin:c.Xmax]
+    z_data = array.to_numpy().reshape(-1) * scaling_factor
     
+    # Combine
+    data = {"x": x_data, "y": y_data, "z": z_data}
+    return data
+
+def get_scaling_factor(mode: str) -> float: 
+    """ The unit of the z axis can be converted using a scaling factor. This 
+        function returns the scaling factor, which can be determined from the
+        mode, which is either 'power' or 'mot number'. 
+    """
     scaling_factor = {
         "power": 1.0 / c.Pow_elec_coef / c.MOTnum_Pow_coef, 
         "mot number": c.hbar * c.omega0_Rb / (c.T_exp * c.eta)
         }[mode]
-    
-    z_data = data.to_numpy().reshape(-1) * scaling_factor
-
-    data = {
-        "x": x_data,
-        "y": y_data,
-        "z": z_data
-        }
-    
-    return data
+    return scaling_factor
 
 def two_D_gauss(X: tuple, 
                 A: float, 
@@ -70,21 +72,14 @@ def two_D_gauss(X: tuple,
 
     return z
 
-def fitting(model: callable, data: dict):
+def fitting(model: callable, data: dict, mode: str):
     """ Fit the model to the data."""
 
     # Extraction
-    x = data["x"]
-    y = data["y"]
-    z = data["z"]
+    x, y, z = data["x"], data["y"], data["z"]
 
     # Initial guess for fit parameters
-    p0 = np.array([5000., 
-                   50. * c.Cell_xsize * c.b, 
-                   100 * c.Cell_ysize * c.b, 
-                   525.*c.Cell_xsize*c.b, 
-                   720.*c.Cell_ysize*c.b, 
-                   100.])
+    p0 = get_initial_guess(data, mode)
     
     # Fitting: popt is the best estimate, pcov is the covariance output
     popt, pcov = curve_fit(model, (x, y), z, p0)
@@ -92,7 +87,7 @@ def fitting(model: callable, data: dict):
 
     # Chi2 contingency
     o = z                                                                           # Observed data
-    e = model((x, y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])   # Estimated data
+    e = model((x, y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])         # Estimated data
     e_normalized = e * sum(o) / sum(e)                                              # Normalize estimate such that chi2 estimation works
     chi2 = stats.chisquare(o, f_exp = e_normalized) # Chi2 outputs two [chi-square, p-value].
 
@@ -115,6 +110,20 @@ def fitting(model: callable, data: dict):
         }
     
     return statistics
+
+def get_initial_guess(data: dict, mode: str): 
+    """ Proposes initial guesses for the fitting parameters with heuristics. 
+    """
+    x, y = data["x"], data["y"] 
+    
+    A = 6e5 if mode == "power" else 1e-6
+    mu_x = np.mean(x)
+    mu_y = np.mean(y)
+    sigma_x = np.std(x - mu_x * np.ones_like(x))
+    sigma_y = np.std(y - mu_y * np.ones_like(y))
+    C = 1e2 if mode == "power" else 1e-12
+    p0 = np.array([A, sigma_x, sigma_y, mu_x, mu_y, C])
+    return p0
     
 def generate_fit_data(data: dict, statistics: dict): 
     """ Takes the x, y values of the data and the fit parameter, and returns
@@ -130,6 +139,7 @@ def generate_fit_data(data: dict, statistics: dict):
     
     # Evaluate the fitted model on the grid
     fit_z = two_D_gauss((X, Y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])
+    # fit_z = two_D_gauss((X, Y), 200000., 0.0001, 0.0001, 0.00624, 0.0091, 102.)
     
     # Convert the fit into the same format as the data
     fit_data = {"x": X, "y": Y, "z": fit_z}
@@ -191,7 +201,7 @@ def perform_analysis(source: str, target: str, mode: str):
     """
     df = load(source=source)
     data = preprocess(df, mode=mode)
-    statistics = fitting(model=two_D_gauss, data=data)
+    statistics = fitting(model=two_D_gauss, data=data, mode=mode)
     fit_data = generate_fit_data(data, statistics)
     plot_fit_result(data, fit_data, target=target, mode=mode)
     print_stats(statistics)
