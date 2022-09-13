@@ -33,15 +33,9 @@ class PMTAnalysis(Analysis):
         df_coil_on = self._query_coil_on(df)
         fig = self._plot_2d_hist(
             df=df_coil_on,
-            setting="Coil on",
             x_column="timestamp", 
             y_column="PMT Current (A)", 
-            x_bin_nr=500, 
-            y_bin_nr=500,
-            x_min_percentile=5.0,
-            x_max_percentile=95.0,
-            y_min_percentile=5.0,
-            y_max_percentile=95.0
+            title_addition="Coil on"
             )
         self.save(fig, "PMT_Hist2D_Coil_on")
         return
@@ -50,15 +44,9 @@ class PMTAnalysis(Analysis):
         df_coil_off = self._query_coil_off(df)
         fig = self._plot_2d_hist(
             df=df_coil_off,
-            setting="Coil off",
             x_column="timestamp", 
             y_column="PMT Current (A)", 
-            x_bin_nr=500, 
-            y_bin_nr=500,
-            x_min_percentile=5.0,
-            x_max_percentile=95.0,
-            y_min_percentile=5.0,
-            y_max_percentile=95.0
+            title_addition="Coil off"
             )
         self.save(fig, "PMT_Hist2D_Coil_off")
         return

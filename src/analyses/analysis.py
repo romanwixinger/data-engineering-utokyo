@@ -14,6 +14,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+""" Class """
+    
+
 class Analysis(object): 
     """ Class for analyzing relationsships between experimental parameters and measurements. 
     """
@@ -52,59 +55,39 @@ class Analysis(object):
     
     def _plot_2d_hist(self,
                       df: pd.DataFrame,
-                      setting: str, 
                       x_column: str, 
-                      y_column: str, 
-                      x_bin_nr: int=100, 
-                      y_bin_nr: int=100, 
-                      x_min_percentile: float=0.0, 
-                      x_max_percentile: float=100.0,
-                      y_min_percentile: float=0.0, 
-                      y_max_percentile: float=100.0
+                      y_column: str,
+                      bin_nr: int=100,
+                      title_addition: str="", 
                       ):
-        """
-        Plots the data from the recorder as 2D histogram. The x_bin_nr and 
-        y_bin_nr specifies how many bins we want to have in each direction.
-        The y_min_p (y_max_p) percentile specifies the percentile of the lower
-        and upper limit of the array. In case of 0.0 (1.0), the full array is
-        used and y_min = min(y), y_max = max(y). 
+        """ Plots the data from the recorder as 2D histogram. 
         """
         
-        # Load data
-        x = df[x_column]
-        y = df[y_column]
+        x, y = df[x_column], df[y_column]
         
         # Prepare parameters
-        x_min = np.min(x)
-        x_max = np.max(x)
-        x_min = np.percentile(x, x_min_percentile)
-        x_max = np.percentile(x, x_max_percentile)
-        y_min = np.percentile(y, y_min_percentile)
-        y_max = np.percentile(y, y_max_percentile)
-        nx = np.linspace(x_min, x_max,  x_bin_nr)
-        ny = np.linspace(y_min, y_max, y_bin_nr)
+        nx = np.linspace(np.min(x), np.max(x), bin_nr)
+        ny = np.linspace(np.min(y), np.max(y), bin_nr)
         
         # Plot
         fig, ax = plt.subplots(figsize=(10, 7))
         plt.hist2d(x, y, bins=(nx, ny), range=None, density=False, weights=None, cmin=None, cmax=None)
         
         # Add descriptions
-        plt.title(f"2D Histogram of {y_column} against {x_column}" + (f": {setting}." if setting else "."))
+        plt.title(f"2D Histogram of {y_column} against {x_column}" + (f": {title_addition}." if title_addition else "."))
         ax.set_xlabel(x_column) 
         ax.set_ylabel(y_column) 
         
         return fig
     
-    def _plot_1d_hist(self, x_column: str, x_bin_nr: int=100): 
+    def _plot_1d_hist(self, x_column: str, bin_nr: int=100): 
         
         # Load data
         ssd_df = self.recorder.get_table()
         x = ssd_df[x_column]
         
         # Prepare parameters
-        x_min = np.min(x)
-        x_max = np.max(x)
-        nx = np.linspace(x_min, x_max, x_bin_nr)
+        nx = np.linspace(np.min(x), np.max(x), bin_nr)
         
         # Plot
         fig, ax = plt.subplots(figsize=(10, 7))
