@@ -32,6 +32,7 @@ class PeakFinder(object):
         self.min_distance = 3.0e10          # [ns]
         self.look_backward_from_peak = 1e9  # [ns]
         self.look_forward_from_peak = 3e9   # [ns]
+        self.search_radius = 6e9            # [ns]
         self.discard_rate = 12              # [int] 
     
         # Bookkeeping 
@@ -88,6 +89,9 @@ class PeakFinder(object):
         # Find peaks as timestamps
         peak_timestamps = self._find_peaks_in_1d_array(pulse_rates, timestamps[:-self.window_size])
         
+        # Optimize their position
+        peak_timestamps = self._optimize_position(new_df, peak_timestamps)
+        
         # Plot peaks
         metadata = {
             "timestamps": timestamps[:-self.window_size],
@@ -123,6 +127,37 @@ class PeakFinder(object):
                 peak_timestamps.append(ts)
                 
         return peak_timestamps
+    
+    def _optimize_position(self, df: pd.DataFrame, peak_timestamps: list) -> list[int]: 
+        optimized_peaks = []
+        for ts in peak_timestamps: 
+            search_df = df[(df.timestamp >= ts-self.search_radius)\
+                      & (df.timestamp <= ts+self.search_radius)]
+            peak_ts = self._find_maximum(search_df)
+            optimized_peaks.append(peak_ts)
+        return optimized_peaks
+    
+    def _find_maximum(self, df) -> float:
+        """ Generates a histogram of the timestamps with 50 bins. Returns the
+            timestamp of the left side of the bin with the highest count. 
+        """
+        
+        # Input validation
+        min_val = min(df["timestamp"])
+        max_val = max(df["timestamp"])
+        if min_val == max_val: 
+            return min_val
+        
+        # Settings
+        nbins = 100
+        
+        # Calculate histogram 
+        hist, bin_edges = np.histogram(df["timestamp"], bins=nbins)
+        
+        # Find timestamp with max hist count
+        max_index = np.argmax(hist)    
+        peak_ts = bin_edges[max_index] + (max_val-min_val)/nbins/2.0
+        return int(peak_ts)
     
     def _generate_peaks(self, df: pd.DataFrame, peak_timestamps: list[int]) -> list[Peak]:
         """
