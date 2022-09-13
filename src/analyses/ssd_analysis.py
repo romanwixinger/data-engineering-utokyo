@@ -14,30 +14,38 @@ import pandas as pd
 
 from recorders.ssd_recorder import SSDRecorder
 from analyses.analysis import Analysis
-    
+from analyses.peak_finder import PeakFinder
+            
 
 class SSDAnalysis(Analysis): 
     
     def __init__(self, filepath: str): 
         super(SSDAnalysis, self).__init__(SSDRecorder(filepath), filepath, "SSD Analysis") 
+        self.peaks = []
+        self.peak_finder = PeakFinder(self.recorder)
+        self.peak_nr = 0
     
     def _run_analysis(self, df: pd.DataFrame):
+        # 2D Histogram of PulsHeight vs Timestamp [Full view]
         fig = self._plot_2d_hist(
-            df=df, 
-            setting="",
-            x_column="timestamp", 
-            y_column="PulseHeight", 
-            x_bin_nr=100, 
-            y_bin_nr=100
+            df=df,
+            x_column="timestamp",
+            y_column="PulseHeight"
             )
         self.save(fig, "SSD_Hist2D")
+        fig.show()
         
-        fig = self._plot_1d_hist(x_column="timestamp", x_bin_nr=100) 
-        self.save(fig, "SSD_Hist1D")
+        # 1D Histogram of Peaks [Zoomed view]
+        peaks = self.peak_finder.get_new_peaks()
+        for peak in peaks:
+            self.peak_nr += 1
+            peak.plot(f"Peak_{self.peak_nr}.png")
+        
         return
-    
+ 
     
 if __name__ == '__main__': 
     
-    ssd_analysis = SSDAnalysis(filepath = "../../data/sample/-20220314-100806-Slot1-In2.csv")
+    ssd_analysis = SSDAnalysis(filepath = "../../data/20220829/-20220829-144945-Slot1-In1.csv")
     ssd_analysis.run()
+
