@@ -20,15 +20,19 @@ import matplotlib.pyplot as plt
 class Analysis(object): 
     """ Class for analyzing relationsships between experimental parameters and measurements. 
     """
-    
-    image_src = "../../plots/"
-    image_extension = ".png"
-    
-    def __init__(self, recorder, filepath, name): 
+        
+    def __init__(self, 
+                 recorder, 
+                 filepath, 
+                 name, 
+                 image_src: str="../../plots/", 
+                 image_extension: str=".png"): 
         self.recorder = recorder
         self.filepath = filepath
         self.name = name
         self.last_updated = 0
+        self.image_src = image_src
+        self.image_extension = ".png"
         
     def run(self): 
         if self.is_up_to_date():

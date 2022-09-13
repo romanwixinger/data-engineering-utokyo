@@ -34,7 +34,7 @@ class Peak(object):
         """
         pass
     
-    def plot(self, url: str=""):
+    def plot(self, url: str):
         """ Visualizes the data and fit and saves the image to the url. 
         """
         

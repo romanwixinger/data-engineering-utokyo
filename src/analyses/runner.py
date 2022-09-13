@@ -41,8 +41,10 @@ class Runner(object):
         
         
 runner = Runner(analyses=[
-    SSDAnalysis(filepath="../../data/20220829/-20220829-144945-Slot1-In1.csv"),
-    PMTAnalysis(filepath="../../data/sample/all_data.csv")
+    SSDAnalysis(filepath="../../data/20220829/-20220829-144945-Slot1-In1.csv",
+                image_src="../../plots/mock"),
+    PMTAnalysis(filepath="../../data/sample/all_data.csv",
+                image_src="../../plots/mock")
     ])
 
 runner.run()

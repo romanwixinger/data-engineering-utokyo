@@ -42,21 +42,20 @@ class PeakFinder(object):
         self.nr_of_pulses = 0       # [1]
         self.background = 0         # [1/ns]
     
-    def get_new_peaks(self) -> list[Peak]: 
+    def get_new_peaks(self, df) -> list[Peak]: 
         """ Loads the new data, estimates the background, finds the peaks and
             returns them. 
         """
-        new_df = self._load_new_data()
+        new_df = self._get_new_data(df)
         self._calculate_new_background(new_df)
-        peak_timestamps = self._find_peaks(new_df) 
+        peak_timestamps, metadata = self._find_peaks(new_df) 
         peaks = self._generate_peaks(new_df, peak_timestamps)
         self.peaks += peaks
-        return peaks
+        return peaks, metadata
             
-    def _load_new_data(self) -> pd.DataFrame: 
-        """ Load the part of the data which has not been processed yet. 
+    def _get_new_data(self, df) -> pd.DataFrame: 
+        """ Returns the part of the data which has not been processed yet. 
         """
-        df = self.recorder.get_table()
         new_df = df[df.timestamp >= self.processed_up_to]
         if self.start_timestamp is None: 
             self.start_timestamp = np.min(new_df.timestamp)
@@ -90,14 +89,13 @@ class PeakFinder(object):
         peak_timestamps = self._find_peaks_in_1d_array(pulse_rates, timestamps[:-self.window_size])
         
         # Plot peaks
-        fig, ax = plt.subplots(figsize=(10, 7))
-        plt.plot(timestamps[:-self.window_size], pulse_rates)
-        for ts in peak_timestamps: 
-            plt.axvline(x=ts, color='r', ls='--', lw=1)
-        fig.savefig(fname="Overview_all_new_peaks.png")
-        plt.show()
+        metadata = {
+            "timestamps": timestamps[:-self.window_size],
+            "pulse_rates": pulse_rates,
+            "peak_timestamps": peak_timestamps
+            }
         
-        return peak_timestamps
+        return peak_timestamps, metadata
         
     def _find_peaks_in_1d_array(self, array: list[float], timestamps: list[int]): 
         """ Takes the array and finds local maxima which have at least a 

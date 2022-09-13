@@ -19,8 +19,16 @@ from analyses.analysis import Analysis
 
 class PMTAnalysis(Analysis): 
     
-    def __init__(self, filepath: str): 
-        super(PMTAnalysis, self).__init__(PMTRecorder(filepath), filepath, "PMT Analysis")
+    def __init__(self, filepath: str,
+                 image_src: str="../../plots/",  
+                 image_extension: str=".png"): 
+        super(PMTAnalysis, self).__init__(
+            recorder=PMTRecorder(filepath), 
+            filepath=filepath, 
+            name="PMT Analysis",
+            image_src=image_src, 
+            image_extension=image_extension
+            )
     
     def _run_analysis(self, df): 
         self._2d_hist_coil_on(df)
