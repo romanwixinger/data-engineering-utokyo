@@ -46,6 +46,6 @@ class SSDAnalysis(Analysis):
     
 if __name__ == '__main__': 
     
-    ssd_analysis = SSDAnalysis(filepath = "../../data/20220829/-20220829-144945-Slot1-In1.csv")
+    ssd_analysis = SSDAnalysis(filepath="../../data/20220829/-20220829-144945-Slot1-In1.csv")
     ssd_analysis.run()
 

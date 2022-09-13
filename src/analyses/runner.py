@@ -28,10 +28,11 @@ class Runner(object):
             if time.time() < self.next_execution(start, period_s, i): 
                 time.sleep(self.next_execution(start, period_s, i) - time.time())
                 
-            print("Time between executations:", "%.2f" % round(time.time() - last, 2), "s")
-            last = time.time()
             for analyses in self.analyses: 
                 analyses.run()
+                
+            print("Time between executations:", "%.2f" % round(time.time() - last, 2), "s")
+            last = time.time()
                 
         return 
     
@@ -40,8 +41,8 @@ class Runner(object):
         
         
 runner = Runner(analyses=[
-    SSDAnalysis(filepath = "../../data/sample/-20220314-100806-Slot1-In2.csv"),
-    PMTAnalysis(filepath = "../../data/sample/all_data.csv")
+    SSDAnalysis(filepath="../../data/20220829/-20220829-144945-Slot1-In1.csv"),
+    PMTAnalysis(filepath="../../data/sample/all_data.csv")
     ])
 
 runner.run()
