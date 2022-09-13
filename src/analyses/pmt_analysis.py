@@ -25,7 +25,7 @@ class PMTAnalysis(Analysis):
     def _run_analysis(self, df): 
         self._2d_hist_coil_on(df)
         self._2d_hist_coil_off(df)
-        fig = self._plot_1d_hist(x_column="timestamp", x_bin_nr=100) 
+        fig = self._plot_1d_hist(x_column="timestamp", bin_nr=100) 
         self.save(fig, "PMT_Hist1D")
         return
         
