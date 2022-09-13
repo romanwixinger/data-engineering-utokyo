@@ -12,34 +12,20 @@ number and the power. The reports are then a collection of results as a table.
 import sys
 sys.path.insert(0,'..')
 
-import os
-import re
-
+from recorders.image_recorder import ImageRecorder
 from fit_mot_number import perform_analysis
-
-
-class Helper(): 
+from analyses.analysis import Analysis
     
-    @classmethod
-    def get_filepaths(cls, folder: str, match: str="*ccd_*.xlsx"):
-        """ Takes a path to a folder, loads all the filepaths and returns 
-        a list of the filepaths which match. 
-        """
-        
-        all_filepaths = cls.get_all_filepaths_in_folder(folder)
-        pattern = re.compile(".*ccd_.*.xlsx")
-        return [s for s in all_filepaths if pattern.match(s)]
     
-    @classmethod
-    def get_all_filepaths_in_folder(cls, folder: str): 
-        filepaths = []
-        for dirpath, dirnames, filenames in os.walk(folder):
-            for filename in filenames: 
-                filepath = os.path.join(dirpath, filename)
-                filepaths.append(filepath)
-        return filepaths
+class ImageAnalysis(Analysis): 
+    pass
     
-folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
-paths = Helper.get_filepaths(folder)
-
-print(paths)
+    
+if __name__=="__main__": 
+    
+    folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
+    match = ".*ccd_detuning.*.xlsx"
+    
+    image_recorder = ImageRecorder(filepath=folder, match=match)
+    
+    
