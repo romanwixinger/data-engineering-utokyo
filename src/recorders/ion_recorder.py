@@ -28,7 +28,8 @@ class IonRecorder(Recorder):
         super(IonRecorder, self).__init__(
             filepath=filepath, 
             has_metadata=False, 
-            always_update=always_update
+            always_update=always_update,
+            encoding='Shift-JIS'
             )
 
     def _harmonize_time(self): 

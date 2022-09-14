@@ -33,7 +33,6 @@ class SSDRecorder(Recorder):
         return self._load_new_data()
 
     def _load_new_data(self) -> pd.DataFrame: 
-        
         """ Just load the new part. """
         return pd.read_csv(
             filepath_or_buffer=self.filepath, 

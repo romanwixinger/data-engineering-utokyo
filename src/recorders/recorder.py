@@ -27,12 +27,15 @@ class Recorder(object):
                  filepath: str, 
                  has_metadata: bool=True, 
                  delimiter: str=",", 
-                 always_update: bool=False): 
+                 always_update: bool=False,
+                 encoding="utf-8"): 
+        
         # Settings
         self.filepath = filepath
         self.has_metadata = has_metadata
         self.delimiter = delimiter
         self.always_update = always_update
+        self.encoding = encoding
         
         # Tracking
         self.read_data_lines = 0
@@ -126,7 +129,8 @@ class Recorder(object):
         """
         return pd.read_csv(
             filepath_or_buffer=self.filepath, 
-            delimiter=self.delimiter
+            delimiter=self.delimiter,
+            encoding=self.encoding
             )
     
     @abstractmethod
@@ -138,7 +142,7 @@ class Recorder(object):
             skiprows=self.read_data_lines,
             header=0,
             names=self._data_columns,
-            delimiter=self.delimiter
+            encoding=self.encoding
             )
     
     @abstractmethod
