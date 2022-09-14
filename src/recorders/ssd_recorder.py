@@ -57,7 +57,9 @@ class SSDRecorder(Recorder):
         """ Overwrite the metadata with the new version. """
         with open(self.filepath, newline='') as f:
             reader = csv.reader(f)
-            metadata = list(reader)[:(self.nr_meta_data_rows + 1)]
+            metadata = []
+            for i in range(self.nr_meta_data_rows + 1):
+                metadata.append(next(reader))
             metadata =  metadata[:3] +  metadata[4:]
             columns = [line[0] for line in metadata]
             row = [line[1] for line in metadata]
