@@ -21,25 +21,37 @@ from recorders.recorder import Recorder
 class SSDRecorder(Recorder): 
     """ Class for data engineering of the SSD2 data. """
 
-    def __init__(self, filepath: str, always_update: bool=False):
+    def __init__(self, filepath: str, always_update: bool=False, lines_per_update: int=1e5):
         super(SSDRecorder, self).__init__(
             filepath=filepath, 
             has_metadata=True, 
-            always_update=always_update
+            always_update=always_update,
             )
         self.nr_meta_data_rows = 37
+        self.lines_per_update = lines_per_update
+        self.loaded_everything = False
         
+    def is_up_to_date(self) -> bool:
+        return all((
+            self.last_updated == self._get_mod_time(),
+            self.loaded_everything
+            ))
+            
     def _load_initial_data(self) -> pd.DataFrame: 
         return self._load_new_data()
 
     def _load_new_data(self) -> pd.DataFrame: 
         """ Just load the new part. """
-        return pd.read_csv(
+        df = pd.read_csv(
             filepath_or_buffer=self.filepath, 
             skiprows=self.nr_meta_data_rows + self.read_data_lines, 
             header=0, 
+            nrows=self.lines_per_update, 
             names=["TraceName", "Time_x", "PulseHeight"]
-            )        
+            )     
+        nrows = len(df.index)
+        self.loaded_everything = nrows < self.lines_per_update
+        return df
 
     def _load_metadata(self): 
         """ Overwrite the metadata with the new version. """
