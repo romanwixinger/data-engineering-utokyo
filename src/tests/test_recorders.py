@@ -199,6 +199,15 @@ class TestRecorders(unittest.TestCase):
              
              # Sanity check
              assert m > n, f"test_refresh() with {SpecialRecorder} failed: n={n}, m={m}."
+             
+    def test_10x_get_table(self):
+        for SpecialRecorder, path in zip(recorders, short_paths):
+            recorder = SpecialRecorder(filepath=path)
+            for i in range(10):
+                df = recorder.get_table()
+                
+
+
     
     
 if __name__ == '__main__': 
