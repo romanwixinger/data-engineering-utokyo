@@ -21,7 +21,7 @@ class Runner(object):
     def __init__(self, analyses): 
         self.analyses = analyses
         
-    def run(self, cycles: int=500, period_s: int=1): 
+    def run(self, cycles: int=100, period_s: int=20): 
         last = time.time()
         start = time.time()
         for i in range(cycles):

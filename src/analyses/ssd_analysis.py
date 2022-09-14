@@ -47,6 +47,8 @@ class SSDAnalysis(Analysis):
         
         # Find peaks
         peaks, metadata = self.peak_finder.get_new_peaks(df)
+        if not peaks: 
+            return
         
         # 1D Histogram of Peaks [Full view]
         fig = self._plot_overview(metadata)
