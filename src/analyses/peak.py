@@ -55,7 +55,7 @@ class Peak(object):
         background = self.background * (max(self.events) - min(self.events)) / bins
         min_xlim, max_xlim = plt.xlim()
         plt.axhline(background, color='k', linestyle='dashed', linewidth=1)
-        plt.text(min_xlim + (max_xlim - min_xlim)*0.6, background * 0.9 + max_ylim * 0.1, 'Background')
+        plt.text(min_xlim + (max_xlim - min_xlim)*0.6, background * 0.95 + max_ylim * 0.05, 'Background')
         
         # Add descriptions
         plt.title("Histogram of peak.")
