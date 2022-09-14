@@ -27,17 +27,19 @@ class PeakFinder(object):
         self.peaks = []
         
         # Settings
-        self.window_size = 500              # [1]
-        self.min_new_pulses = 1600          # [1]
+        self.window_size = 200              # [1]
+        self.min_new_pulses = 500           # [1]
         self.min_distance = 3.0e10          # [ns]
-        self.look_backward_from_peak = 1e9  # [ns]
-        self.look_forward_from_peak = 3e9   # [ns]
+        self.look_left = 1e9                # [ns]
+        self.look_right = 3e9               # [ns]
         self.search_radius = 6e9            # [ns]
-        self.discard_rate = 12              # [int] 
+        self.discard_rate = 5               # [int] 
+        self.min_pulses_for_peak = 6        # [int]
     
         # Bookkeeping 
         self.processed_up_to = 0            # [ns]
-        self.max_peaks_per_run = 5          # [1]
+        self.max_peaks_per_run = 20         # [1]
+        self.max_pulses_per_run = 360*1000  # [1]
         
         # Background calculation
         self.start_timestamp = None         # [ns]
@@ -81,7 +83,7 @@ class PeakFinder(object):
         timestamps = new_df["timestamp"]
         n = len(timestamps)
         if n <= self.min_new_pulses: 
-            return []
+            return [], {}
         
         # Sliding window 
         time_diffs = [fast - slow for slow, fast in zip(timestamps, timestamps[self.window_size:])] # [ns]
@@ -92,6 +94,9 @@ class PeakFinder(object):
         
         # Optimize their position
         peak_timestamps = self._optimize_position(new_df, peak_timestamps)
+        
+        # Verify peaks
+        peak_timestamps = [ts for ts in peak_timestamps if self._is_peak(new_df, ts)]
         
         # Plot peaks
         metadata = {
@@ -172,8 +177,7 @@ class PeakFinder(object):
         
         peaks = []
         for ts in peak_timestamps:
-            events = df[(df.timestamp >= ts-self.look_backward_from_peak)\
-                      & (df.timestamp <= ts+self.look_forward_from_peak)]["timestamp"]
+            events = self._get_data_near_peak(df, ts, self.look_left, self.look_right)["timestamp"]
             peak = Peak(
                 timestamp=ts, 
                 events=events,
@@ -181,4 +185,21 @@ class PeakFinder(object):
                 )
             peaks.append(peak)
         return peaks
+    
+    def _get_data_near_peak(self, df: pd.DataFrame, ts: int, left: int, right: int): 
+        """ Returns all rows of df with timestamp in [ts-left, ts+right]. 
+        """
+        return df[(df.timestamp >= ts-left) & (df.timestamp <= ts+right)]
+    
+    def _is_peak(self, df: pd.DataFrame, ts): 
+        """ Returns if the peak has more pulses than the background would. 
+        """
+        
+        df1 = self._get_data_near_peak(df, ts, self.look_left, self.look_right)
+        time_diff = np.max(df1["timestamp"]) - np.min(df1["timestamp"])
+        exp_background = time_diff * self.background
+        obs_pulses = len(df1.index)
+        return obs_pulses >= exp_background + self.min_pulses_for_peak
+        
+        
             
