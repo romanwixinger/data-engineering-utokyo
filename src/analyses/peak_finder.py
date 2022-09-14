@@ -36,12 +36,13 @@ class PeakFinder(object):
         self.discard_rate = 12              # [int] 
     
         # Bookkeeping 
-        self.processed_up_to = 0    # [ns]
+        self.processed_up_to = 0            # [ns]
+        self.max_peaks_per_run = 5          # [1]
         
         # Background calculation
-        self.start_timestamp = None # [ns]
-        self.nr_of_pulses = 0       # [1]
-        self.background = 0         # [1/ns]
+        self.start_timestamp = None         # [ns]
+        self.nr_of_pulses = 0               # [1]
+        self.background = 0                 # [1/ns]
     
     def get_new_peaks(self, df) -> list[Peak]: 
         """ Loads the new data, estimates the background, finds the peaks and
@@ -121,10 +122,14 @@ class PeakFinder(object):
         # Build list of maxima
         peaks = [array_sorted[0]]
         peak_timestamps = [timestamps_sorted[0]]
+        peaks_found = 0
         for x, ts in zip(array_sorted[1:], timestamps_sorted[1:]):
             if all((abs(ts - peak_ts) > self.min_distance for peak_ts in peak_timestamps)): 
+                peaks_found += 1
                 peaks.append(x)
                 peak_timestamps.append(ts)
+                if peaks_found == self.max_peaks_per_run: 
+                    break
                 
         return peak_timestamps
     
