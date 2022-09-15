@@ -4,7 +4,15 @@ Created on Wed Sep  7 09:42:32 2022
 
 @author: Roman Wixinger (roman.wixinger@gmail.com)
 
-SSD Analysis -> Histogram
+SSD Analysis -> Visualizes the pulses and peaks in the pulses. 
+
+Note: The SSDAnalysis works with the SSDParser instead of the usual SSDRecorder,
+which means that each time we perform ssd_analysis.run(), only the next 
+10^5 pulses are analyzed. Using the SSDRecorder is not recommended, as it would
+load to many pulses for the analysis. 
+
+One can use the Runner to conveniently process the full data in real time. 
+This allows us to get visualizations for all peaks. 
 """
 
 import sys
@@ -13,7 +21,7 @@ sys.path.insert(0,'..')
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from recorders.ssd_recorder import SSDRecorder
+from recorders.ssd_recorder import SSDParser
 from analyses.analysis import Analysis
 from analyses.peak_finder import PeakFinder
             
@@ -24,7 +32,7 @@ class SSDAnalysis(Analysis):
                  image_src: str="../../plots/",  
                  image_extension: str=".png"):
         super(SSDAnalysis, self).__init__(
-            recorder=SSDRecorder(filepath), 
+            recorder=SSDParser(filepath), 
             filepath=filepath, 
             name="SSD Analysis",
             image_src=image_src, 

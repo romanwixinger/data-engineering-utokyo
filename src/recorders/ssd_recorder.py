@@ -93,3 +93,18 @@ class SSDRecorder(Recorder):
             return df
         
         self._table_df = harmonize_table(self._table_df)
+        
+        
+class SSDParser(SSDRecorder): 
+    """ Acts as a parser in the sense that it forgets about the old data upon
+        reloading. This keeps the table size small. 
+    """
+    
+    def _update_data(self):
+        new_data_df = self._load_new_data()
+        self.read_data_lines += len(new_data_df.index)
+        if len(new_data_df.index) > 0: 
+            self._data_df = new_data_df
+    
+        
+        
