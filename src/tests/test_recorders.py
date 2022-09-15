@@ -205,9 +205,55 @@ class TestRecorders(unittest.TestCase):
             recorder = SpecialRecorder(filepath=path)
             for i in range(10):
                 df = recorder.get_table()
+                # Force evaluation
+                mock_dic = df.to_dict()
                 
-
-
+    def test_10x_get_data(self):
+        for SpecialRecorder, path in zip(recorders, short_paths):
+            recorder = SpecialRecorder(filepath=path)
+            for i in range(10):
+                df = recorder.get_table()
+                # Force evaluation
+                mock_dic = df.to_dict()
+    
+    def test_10x_get_metadata(self):
+        for SpecialRecorder, path in zip(recorders, short_paths):
+            recorder = SpecialRecorder(filepath=path)
+            for i in range(10):
+                df = recorder.get_table()
+                # Force evaluation
+                mock_dic = df.to_dict()
+                
+                
+    def test_10x_get_table_with_reset(self):
+        for SpecialRecorder, path in zip(recorders, short_paths):
+            recorder = SpecialRecorder(filepath=path)
+            for i in range(10):
+                df = recorder.get_table()
+                # Force evaluation
+                mock_dic = df.to_dict()
+                # Reset
+                recorder.last_updated = 0
+                
+    def test_10x_get_data_with_reset(self):
+        for SpecialRecorder, path in zip(recorders, short_paths):
+            recorder = SpecialRecorder(filepath=path)
+            for i in range(10):
+                df = recorder.get_table()
+                # Force evaluation
+                mock_dic = df.to_dict()
+                # Reset
+                recorder.last_updated = 0
+    
+    def test_10x_get_metadata_with_reset(self):
+        for SpecialRecorder, path in zip(recorders, short_paths):
+            recorder = SpecialRecorder(filepath=path)
+            for i in range(10):
+                df = recorder.get_table()
+                # Force evaluation
+                mock_dic = df.to_dict()
+                # Reset
+                recorder.last_updated = 0
     
     
 if __name__ == '__main__': 
