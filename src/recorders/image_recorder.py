@@ -14,9 +14,10 @@ sys.path.insert(0,'..')
 
 import os
 import re
-import numpy as np
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
+
 
 from recorders.recorder import Recorder
 
@@ -63,8 +64,12 @@ class ImageRecorder(Recorder):
         self.filepath_set = self.filepath_set | new_filepaths
         
         # Load metadata and create table
-        columns = ["filename", "filepath", "mtime", "ctime"]
-        funcs = [os.path.basename, lambda x: x, os.path.getmtime, os.path.getctime]
+        columns = ["filename", "filename_with_extension", "filepath", "mtime", "ctime"]
+        funcs = [lambda x: Path(x).stem, 
+                os.path.basename, 
+                 lambda x: x, 
+                 os.path.getmtime, 
+                 os.path.getctime]
         rows = [list(func(path) for func in funcs) for path in new_filepaths]
         return pd.DataFrame(data=rows, columns=columns)
         
