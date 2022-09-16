@@ -27,7 +27,7 @@ class PeakFinder(object):
         self.peaks = []
         
         # Settings
-        self.window_size = 200              # [1]
+        self.window_size = 800              # [1]
         self.min_new_pulses = 500           # [1]
         self.min_distance = 3.0e10          # [ns]
         self.look_left = 1e9                # [ns]
@@ -127,7 +127,7 @@ class PeakFinder(object):
         # Build list of maxima
         peaks = [array_sorted[0]]
         peak_timestamps = [timestamps_sorted[0]]
-        peaks_found = 0
+        peaks_found = 1
         for x, ts in zip(array_sorted[1:], timestamps_sorted[1:]):
             if all((abs(ts - peak_ts) > self.min_distance for peak_ts in peak_timestamps)): 
                 peaks_found += 1
