@@ -113,7 +113,7 @@ class SSDAnalysis(Analysis):
             
         # Add labels
         plt.title("Peaks in the pulse rate from the SSD")
-        plt.xlabel("Time")
+        plt.xlabel("Time [H:M]")
         plt.ylabel("Pulse rate [Hz]")
         ax.legend()
         

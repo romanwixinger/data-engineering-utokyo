@@ -74,16 +74,15 @@ class Peak(object):
         max_ts = np.max(self.events) - (np.max(self.events) % second)
         stepsize = second 
         ts_list = np.arange(min_ts, max_ts + 2 * second, stepsize)[1:-1]
-        print(ts_list)
         timestamps_list = self._ts_ns_to_timestamp(ts_list)
         ax.xaxis.set_ticks(timestamps_list)
-        xfmt = md.DateFormatter('%H:%M:%S')
+        xfmt = md.DateFormatter('%M:%S')
         ax.xaxis.set_major_formatter(xfmt)
         plt.xticks(rotation=25)
         
         # Add descriptions
         plt.title("Histogram of SSD pulses around the peak.")
-        plt.xlabel("Time")
+        plt.xlabel("Time [M:S]")
         plt.ylabel("Pulses [1]")
         fig.savefig(fname=url)
         plt.show()

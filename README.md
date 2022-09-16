@@ -9,6 +9,17 @@ The package can map csv files created by LabView to pandas dataframes in real-ti
 ## Outputs
 The output comes in two forms of recorders and analyses. The recorders abstract away loading the csv file as pandas dataframe and keeping it up to date when more data comes in. It also provides a solution for handling csv file which are to large for pandas by introducing a parser mode. Each time we evaluate the parser, it provides us with the next chunk of data as pandas dataframe. 
 
+## Impressions
+The plot and histogram are visualizations of the SSD data: <br> 
+
+<img src="impressions\SSD_Peak_Overview_Plot.png" alt="SSD Overview" width="300"/>
+<img src="impressions\SSD_Peak_Histogram.png" alt="SSD Histogram" width="288"/>
+<br>
+
+This 2D plot is obtained by Maximum Likelihood Estimation with a Gaussian model on an image from the CCD camera. <br>
+<img src="impressions\CCD_2D_Gaussian.png" alt="2D Gaussian fit from CCD camera image" width="288"/>
+
+
 ## Example 
 How to use the package to track your own csv files. 
 
