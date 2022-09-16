@@ -13,35 +13,12 @@ import sys
 sys.path.insert(0,'..')
 
 import os
-import re
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
 
-
 from recorders.recorder import Recorder
-
-
-class Helper(): 
-    
-    @classmethod
-    def get_filepaths(cls, folder: str, match: str=".*ccd_.*.xlsx"):
-        """ Takes a path to a folder, loads all the filepaths and returns 
-        a list of the filepaths which match. 
-        """
-        
-        all_filepaths = cls.get_all_filepaths_in_folder(folder)
-        pattern = re.compile(match)
-        return [s for s in all_filepaths if pattern.match(s)]
-    
-    @classmethod
-    def get_all_filepaths_in_folder(cls, folder: str): 
-        filepaths = []
-        for dirpath, dirnames, filenames in os.walk(folder):
-            for filename in filenames: 
-                filepath = os.path.join(dirpath, filename)
-                filepaths.append(filepath)
-        return filepaths
+from analyses.path_helper import PathHelper 
 
 
 class ImageRecorder(Recorder): 
@@ -59,7 +36,7 @@ class ImageRecorder(Recorder):
         """ Returns all data (filepath and metadata of images) which are new. 
         """
         # Generate filepaths and add them to loaded
-        filepaths = Helper.get_filepaths(folder=self.filepath, match=self.match)
+        filepaths = PathHelper.get_filepaths(folder=self.filepath, match=self.match)
         new_filepaths = set(filepaths) - self.filepath_set
         self.filepath_set = self.filepath_set | new_filepaths
         
