@@ -2,7 +2,11 @@
 """
 Created on Fri Sep 16 10:33:23 2022
 
-@author: roman
+@author: Roman Wixinger (roman.wixinger@gmail.com)
+
+Utilities for finding the paths of the data, for example the many images. 
+Can retrieve the newest filepath which matches a certain regex. This can safe
+us from hardcoding the filepaths. 
 """
 
 
