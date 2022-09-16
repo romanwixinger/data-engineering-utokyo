@@ -18,12 +18,19 @@ This allows us to get visualizations for all peaks.
 import sys
 sys.path.insert(0,'..')
 
+import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as md
 import pandas as pd
+import datetime as dt
 
+import constants as c
 from recorders.ssd_recorder import SSDParser
 from analyses.analysis import Analysis
 from analyses.peak_finder import PeakFinder
+
+
+plt.rcParams.update(c.plotting_params)
             
 
 class SSDAnalysis(Analysis): 
@@ -73,14 +80,47 @@ class SSDAnalysis(Analysis):
     
     def _plot_overview(self, metadata):
         timestamps = metadata["timestamps"]
-        pulse_rates = metadata["pulse_rates"]
+        pulse_rates = metadata["pulse_rates"] # Convert [1/ns] to [1/s]
         peak_timestamps = metadata["peak_timestamps"]
         
+        # Convert units
+        timestamps = self._ts_ns_to_timestamp(timestamps)
+        peak_timestamps = self._ts_ns_to_timestamp(peak_timestamps)
+        pulse_rates = [pr * 1e9 for pr in pulse_rates]  # Convert [1/ns] to [1/s]
+        
+        # Plot pulse rates
         fig, ax = plt.subplots(figsize=(10, 7))
-        plt.plot(timestamps, pulse_rates)
-        for ts in peak_timestamps: 
-            plt.axvline(x=ts, color='r', ls='--', lw=1)
+        plt.plot(timestamps, pulse_rates, label="SSD pulses")
+        
+        # Plot peaks
+        if len(peak_timestamps) > 0: 
+            plt.axvline(x=peak_timestamps[0], color='r', ls='--', lw=1, label="Peak")
+        if len(peak_timestamps) > 1: 
+            for ts in peak_timestamps[1:]: 
+                plt.axvline(x=ts, color='r', ls='--', lw=1)
+        
+        # Timestamp of x-axis
+        minute = 60 * 1000000000 
+        min_ts = np.min(metadata["timestamps"]) - (np.min(metadata["timestamps"]) % minute)
+        max_ts = np.max(metadata["timestamps"]) - (np.max(metadata["timestamps"]) % minute)
+        stepsize = minute * int((max_ts - min_ts) / minute / 15 + 1)
+        ts_list = np.arange(min_ts, max_ts + 2 * minute, stepsize)
+        timestamps_list = self._ts_ns_to_timestamp(ts_list)
+        ax.xaxis.set_ticks(timestamps_list)
+        xfmt = md.DateFormatter('%H:%M')
+        ax.xaxis.set_major_formatter(xfmt)
+        plt.xticks(rotation=25)
+            
+        # Add labels
+        plt.title("Peaks in the pulse rate from the SSD")
+        plt.xlabel("Time")
+        plt.ylabel("Pulse rate [Hz]")
+        ax.legend()
+        
         return fig
+    
+    def _ts_ns_to_timestamp(self, ts_list: list[int]): 
+        return [dt.datetime.fromtimestamp(ts // 1000000000) for ts in ts_list]
  
     
 if __name__ == '__main__': 
