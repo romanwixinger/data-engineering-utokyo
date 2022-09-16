@@ -73,7 +73,6 @@ unittest_long_loc = Locations(
     )
 
 
-
 # Remote settings
 remote_loc = Locations(
     gauge="../../../TPG256Monitor/TPG256GaugeMonitor_Single_DESKTOP-BEF5FI4_20220908_124458.csv",
@@ -81,3 +80,17 @@ remote_loc = Locations(
 
 # Standard setting
 loc = roman_loc
+
+
+""" Plotting """
+
+plotting_params = {
+    'legend.fontsize': 'medium',
+    'figure.figsize': (10, 7),
+    'figure.titlesize': 'x-large',
+    'axes.labelsize': 'x-large',
+    'axes.titlesize': 'x-large',
+    'xtick.labelsize':'medium',
+    'ytick.labelsize':'medium',
+    'font.size': 14
+    }
