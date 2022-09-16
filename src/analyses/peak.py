@@ -14,6 +14,11 @@ sys.path.insert(0,'..')
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as md
+import datetime as dt
+
+from constants import plotting_params
+plt.rcParams.update(plotting_params)
 
 
 class Peak(object): 
@@ -38,28 +43,55 @@ class Peak(object):
         """ Visualizes the data and fit and saves the image to the url. 
         """
         
+        # Convert unit
+        timestamp = self._ts_ns_to_timestamp(self.timestamp)
+        timestamps = self._ts_ns_to_timestamp(self.events)
+        
         # Prepare parameters
         bins = 50
-        nx = np.linspace(np.min(self.events), np.max(self.events), bins)
         
         # Plot
         fig, ax = plt.subplots(figsize=(10, 7))
-        plt.hist(self.events, bins=(nx))
-       
-        # Add references to timestamp
-        plt.axvline(self.timestamp, color='k', linestyle='dashed', linewidth=1)
-        min_ylim, max_ylim = plt.ylim()
-        plt.text(self.timestamp + 1e8, max_ylim*0.9, 'Peak timestamp')
+        plt.hist(timestamps, bins=bins)
         
+        # Add references to timestamp
+        plt.axvline(timestamp, color='k', linestyle='dashed', linewidth=1)
+        min_xlim, max_xlim = plt.ylim()
+        min_ylim, max_ylim = plt.ylim()
+        plt.text(timestamp + dt.timedelta(milliseconds=100), 0.1 * min_ylim + 0.9 * max_ylim, 'Peak timestamp')
+        
+
         # Add reference regarding background
         background = self.background * (max(self.events) - min(self.events)) / bins
         min_xlim, max_xlim = plt.xlim()
         plt.axhline(background, color='k', linestyle='dashed', linewidth=1)
-        plt.text(min_xlim + (max_xlim - min_xlim)*0.6, background * 0.95 + max_ylim * 0.05, 'Background')
+        plt.text(min_xlim + (max_xlim - min_xlim)*0.8, background * 0.90 + max_ylim * 0.1, 'Background')
+        
+       
+        # Timestamp of x-axis
+        second = 1000000000 
+        min_ts = np.min(self.events) - (np.min(self.events) % second)
+        max_ts = np.max(self.events) - (np.max(self.events) % second)
+        stepsize = second 
+        ts_list = np.arange(min_ts, max_ts + 2 * second, stepsize)[1:-1]
+        print(ts_list)
+        timestamps_list = self._ts_ns_to_timestamp(ts_list)
+        ax.xaxis.set_ticks(timestamps_list)
+        xfmt = md.DateFormatter('%H:%M:%S')
+        ax.xaxis.set_major_formatter(xfmt)
+        plt.xticks(rotation=25)
         
         # Add descriptions
-        plt.title("Histogram of peak.")
+        plt.title("Histogram of SSD pulses around the peak.")
+        plt.xlabel("Time")
+        plt.ylabel("Pulses [1]")
         fig.savefig(fname=url)
         plt.show()
 
         return 
+    
+    def _ts_ns_to_timestamp(self, ts_list: list[int]): 
+        if type(ts_list) == int: 
+            ts = ts_list
+            return dt.datetime.fromtimestamp(ts / 1000000000)
+        return [dt.datetime.fromtimestamp(ts / 1000000000) for ts in ts_list]
