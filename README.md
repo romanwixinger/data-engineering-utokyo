@@ -12,8 +12,8 @@ The output comes in two forms of recorders and analyses. The recorders abstract 
 ## Impressions
 The plot and histogram are visualizations of the SSD data. The peaks and the background are fitted with an algorithm. <br> 
 
-<img src="impressions\SSD_Peak_Overview_Plot.png" alt="SSD Overview" width="300"/>
-<img src="impressions\SSD_Peak_Histogram.png" alt="SSD Histogram" width="288"/>
+<img src="impressions\SSD_Peak_Overview_Plot.png" alt="SSD Overview"  height="210"/>
+<img src="impressions\SSD_Peak_Histogram.png" alt="SSD Histogram" width="300" height="210"/>
 <br>
 
 This 2D plot is obtained by Maximum Likelihood Estimation with a Gaussian model on an image from the CCD camera. <br>
