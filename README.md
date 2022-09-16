@@ -10,7 +10,7 @@ The package can map csv files created by LabView to pandas dataframes in real-ti
 The output comes in two forms of recorders and analyses. The recorders abstract away loading the csv file as pandas dataframe and keeping it up to date when more data comes in. It also provides a solution for handling csv file which are to large for pandas by introducing a parser mode. Each time we evaluate the parser, it provides us with the next chunk of data as pandas dataframe. 
 
 ## Impressions
-The plot and histogram are visualizations of the SSD data: <br> 
+The plot and histogram are visualizations of the SSD data. The peaks and the background are fitted with an algorithm. <br> 
 
 <img src="impressions\SSD_Peak_Overview_Plot.png" alt="SSD Overview" width="300"/>
 <img src="impressions\SSD_Peak_Histogram.png" alt="SSD Histogram" width="288"/>
