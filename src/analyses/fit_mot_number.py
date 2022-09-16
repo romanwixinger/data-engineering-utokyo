@@ -51,26 +51,10 @@ def get_scaling_factor(mode: str) -> float:
         mode, which is either 'power' or 'mot number'. 
     """
     scaling_factor = {
-        "power": 1.0 / c.Pow_elec_coef / c.MOTnum_Pow_coef, 
-        "mot number": c.hbar * c.omega0_Rb / (c.T_exp * c.eta)
+        "mot number": 1.0 / c.Pow_elec_coef / c.MOTnum_Pow_coef, 
+        "power": c.hbar * c.omega0_Rb / (c.T_exp * c.eta)
         }[mode]
     return scaling_factor
-
-def two_D_gauss(X: tuple, 
-                A: float, 
-                sigma_x: float, 
-                sigma_y: float, 
-                mu_x: float, 
-                mu_y: float, 
-                C: float): 
-    x, y = X 
-    z = A * c.Cell_xsize * c.Cell_ysize\
-        / (2*np.pi*np.sqrt(sigma_x**2*sigma_y**2))\
-        * np.exp(-(x-mu_x)**2/(2*sigma_x**2))\
-        * np.exp(-(y-mu_y)**2/(2*sigma_y**2))\
-        + C
-
-    return z
 
 def fitting(model: callable, data: dict, mode: str):
     """ Fit the model to the data."""
@@ -133,16 +117,16 @@ def get_initial_guess(data: dict, mode: str):
     """
     x, y = data["x"], data["y"] 
     
-    A = 6e5 if mode == "power" else 1e-6
+    A = 6e5 if mode == "mot number" else 1e-6
     mu_x = np.mean(x)
     mu_y = np.mean(y)
     sigma_x = np.std(x - mu_x * np.ones_like(x))
     sigma_y = np.std(y - mu_y * np.ones_like(y))
-    C = 1e2 if mode == "power" else 1e-12
+    C = 1e2 if mode == "mot number" else 1e-12
     p0 = np.array([A, sigma_x, sigma_y, mu_x, mu_y, C])
     return p0
     
-def generate_fit_data(data: dict, statistics: dict): 
+def generate_fit_data(model: callable, data: dict, statistics: dict): 
     """ Takes the x, y values of the data and the fit parameter, and returns
         fitted z values on a x, y grid in the same format as the data. 
     """
@@ -155,7 +139,7 @@ def generate_fit_data(data: dict, statistics: dict):
     X, Y = np.meshgrid(fit_x, fit_y)
     
     # Evaluate the fitted model on the grid
-    fit_z = two_D_gauss((X, Y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])
+    fit_z = model((X, Y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])
     # fit_z = two_D_gauss((X, Y), 200000., 0.0001, 0.0001, 0.00624, 0.0091, 102.)
     
     # Convert the fit into the same format as the data
@@ -188,13 +172,19 @@ def plot_fit_result(data: dict, fit_data: dict, target: str, mode: str):
     # Labels
     ax.set_xlabel('X (m)')
     ax.set_ylabel('Y (m)')
-    ax.set_zlabel('Power (W)' if mode=="power" else 'atom number')
+    ax.set_zlabel('Power (W)' if mode=="power" else 'Atom number [1/pixel]')
     
     # Save image
     plt.savefig(target, dpi=300)
     plt.show(block=False)
 
 def print_stats(statistics: dict):
+    if not statistics["fit_successful"]: 
+        print(" Result ***********")
+        print("Fit was not succesful.")
+        print("*******************")
+        return
+        
     print(" Result ***********")
     print("z = (A/(2*np.pi*sigma_x*sigma_y)) * np.exp(-(x-mu_x)**2/(2*sigma_x**2)) * np.exp(-(y-mu_y)**2/(2*sigma_y**2)) + C")
     print("A = ", statistics["A"], "+-", statistics["A_unc"])
@@ -217,10 +207,11 @@ def perform_analysis(source: str, target: str, mode: str):
     """
     df = load(source=source)
     data = preprocess(df, mode=mode)
-    statistics = fitting(model=two_D_gauss, data=data, mode=mode)
+    statistics = fitting(model=c.two_D_gauss, data=data, mode=mode)
     if statistics["fit_successful"]: 
-        fit_data = generate_fit_data(data, statistics)
+        fit_data = generate_fit_data(c.two_D_gauss, data, statistics)
         plot_fit_result(data, fit_data, target=target, mode=mode)
+    print_stats(statistics)
     return statistics
     
 

@@ -2,7 +2,8 @@
 """
 Created on Fri Sep  9 16:53:11 2022
 
-@author: roman
+@author: Shintaro Nagase (nagase@cns.s.u-tokyo.ac.jp) 
+@co-author: Roman Wixinger (roman.wixinger@gmail.com)
 
 MOT constants. 
 """
@@ -10,6 +11,7 @@ MOT constants.
 import numpy as np
 
 
+# Natural constants
 hbar= 1.054571817 * 10**(-34)     # Planck constant (Js)
 c = 299792458                     # Speed of light (m/s)
 
@@ -21,7 +23,7 @@ eta = 0.5                         # Quantum efficiency
 b = 10/5.3277                     # Lens magnification
 
 # Atom
-lambda_Rb = 780 * 10**(-9)        # Fluorescence wavelength (m)
+lambda_Rb = 780 * 10**(-9)          # Fluorescence wavelength (m)
 omega0_Rb = 2*np.pi*c/lambda_Rb
 Gamma_Rb = 2*np.pi * 7.6 * 10**(6)  # Life span (Hz)
 I_sat = 3.5771                      # Saturation strength (mW/cm^2)
@@ -44,9 +46,41 @@ VP_area = 8**2 * np.pi              # ICF34 viewport area (cm^2)
 r_VP = 65                           # Distance from MOT center to viewport (cm)
 Omega_VP = VP_area / r_VP**2        # Solid angle of viewport
 
-# Conversion formula
-Pow_elec_coef =  (T_exp*eta)/(hbar * omega0_Rb)     # Power (W) → Signal (electron) conversion 
-MOTnum_Pow_coef = hbar*omega0_Rb*Gamma_Rb/2 * s_0/(1+s_0) * 1/(1+(2*delta/Eff_Gamma_Rb)**2) * Omega_VP/(4*np.pi)    # MOT原子数→パワー(W)変換
+# Gaussian model
+def two_D_gauss(X: tuple, 
+                A: float, 
+                sigma_x: float, 
+                sigma_y: float, 
+                mu_x: float, 
+                mu_y: float, 
+                C: float): 
+    x, y = X 
+    z = A * Cell_xsize * Cell_ysize\
+        / (2*np.pi*np.sqrt(sigma_x**2*sigma_y**2))\
+        * np.exp(-(x-mu_x)**2/(2*sigma_x**2))\
+        * np.exp(-(y-mu_y)**2/(2*sigma_y**2))\
+        + C
+
+    return z
+
+# Conversion formula [CCD]
+Pow_elec_coef =  (T_exp*eta)/(hbar * omega0_Rb)  #  Power (W) → Signal (electron) conversion 
+MOTnum_Pow_coef = hbar*omega0_Rb*Gamma_Rb/2 * s_0/(1+s_0) * 1/(1+(2*delta/Eff_Gamma_Rb)**2) * Omega_VP/(4*np.pi)  # MOT Atomic Number to Power (W) Conversion
+Elec_MOTnum_coef = 1.0 / MOTnum_Pow_coef  / Pow_elec_coef #  Signal (electron) to MOT number conversion 
+
+# Current integrator
+pulse_per_coulomb = 10^-6   # (1/C)
+
+# PMT
+Gain = 1.0                  # (1)
+beta_cathode = 63.0 / 1000  # (A/W)
+
+# Conversion formula [PMT, Rubidium]
+Pow_pulses_per_s_coef = (1.0 / pulse_per_coulomb) * (1.0/(Gain * beta_cathode)) 
+MOTnum_pulses_per_s_coef = Pow_pulses_per_s_coef / MOTnum_Pow_coef 
+
+# Conversion formula [PMT, Francium]
+
 
 # Input data (observed data)
 Xmin = 480
@@ -55,3 +89,11 @@ Ymin = 630
 Ymax = 810
 Xnum = Xmax - Xmin
 Ynum = Ymax - Ymin
+
+# Functions
+
+def convert_pulse_rate_to_MOT(pulse_rate: float, with_beamsplitter: bool): 
+    """ Takes the pulse rate [1/s] of the PMT and whether or not a beamsplitter 
+        was applied. Returns the MOT number. 
+    """
+    return pulse_rate * MOTnum_pulses_per_s_coef * (2.0 if with_beamsplitter else 1.0)
