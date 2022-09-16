@@ -53,7 +53,7 @@ class ImageAnalysis(Analysis):
         
         # Save the result
         self._save_df(enriched_df)
-        return enriched_df 
+        return enriched_df
     
     def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list[dict]) -> pd.DataFrame: 
         """ Takes the table from the ImageRecorder and the statistics generated 

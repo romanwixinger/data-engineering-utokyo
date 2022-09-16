@@ -39,8 +39,7 @@ class Analysis(object):
             return
         df = self.recorder.get_table()
         self.last_updated = self.recorder.last_updated
-        self._run_analysis(df)
-        return
+        return self._run_analysis(df)
     
     def save(self, fig, filename): 
         fig.savefig(fname = self.image_src + filename + self.image_extension)
@@ -52,7 +51,7 @@ class Analysis(object):
             ))
     
     @abstractmethod
-    def _run_analysis(self): 
+    def _run_analysis(self, df: pd.DataFrame): 
         """ Methods which executes the plotting and saving. 
         """
         pass
