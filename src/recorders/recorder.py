@@ -81,7 +81,6 @@ class Recorder(object):
             
         # Order 
         self._harmonize_time()
-        self._table_df = self._table_df.sort_values(by="timestamp")
         self.last_updated = self._get_mod_time()
         
     def _update_data(self):
