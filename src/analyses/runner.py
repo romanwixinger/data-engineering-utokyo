@@ -13,7 +13,7 @@ sys.path.insert(0,'..')
 import time
 
 from analyses.ssd_analysis import SSDAnalysis
-from analyses.pmt_analysis import PMTAnalysis
+from analyses.image_analysis import ImageAnalysis
 
 
 class Runner(object): 
@@ -21,7 +21,7 @@ class Runner(object):
     def __init__(self, analyses): 
         self.analyses = analyses
         
-    def run(self, cycles: int=100, period_s: int=20): 
+    def run(self, cycles: int=100, period_s: int=5): 
         last = time.time()
         start = time.time()
         for i in range(cycles):
@@ -39,12 +39,29 @@ class Runner(object):
     def next_execution(self, start, period_s, i):
         return start + period_s * i
         
+    
+if __name__ == '__main__': 
+    
+    # Input 
+    ssd_file = "../../data/20220829/-20220829-144945-Slot1-In1.csv"
+    image_folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
+    match = ".*ccd_detuning.*.xlsx"
+    
+    # Output 
+    plot_path = "../../plots/20220829/"
+    result_path = "../../results/20220829/"
         
-runner = Runner(analyses=[
-    SSDAnalysis(filepath="../../data/20220829/-20220829-144945-Slot1-In1.csv",
-                image_src="../../plots/mock"),
-    PMTAnalysis(filepath="../../data/sample/all_data.csv",
-                image_src="../../plots/mock")
-    ])
-
-runner.run()
+    runner = Runner(analyses=[
+        SSDAnalysis(
+            filepath=ssd_file ,
+            image_src=plot_path + "ssd/",
+            image_extension=".png",
+            result_filepath=result_path+"ssd_analysis_results.csv"
+            ),
+        ImageAnalysis(filepath=image_folder, 
+                    match=match, 
+                    image_src=plot_path+"image/",
+                    result_filepath=result_path+"image_analysis_results.csv")
+        ])
+    
+    runner.run(cycles=3*60, period_s=5)
