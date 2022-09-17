@@ -26,7 +26,8 @@ class ImageAnalysis(Analysis):
                  image_src: str="../../plots/",  
                  image_extension: str=".png",
                  match: str=".*ccd_detuning.*.xlsx",
-                 result_filepath: str=""):
+                 result_filepath: str="",
+                 min_signal: int=0):
         super(ImageAnalysis, self).__init__(
             recorder=ImageParser(filepath, match=match), 
             filepath=filepath, 
@@ -35,6 +36,7 @@ class ImageAnalysis(Analysis):
             image_extension=image_extension,
             result_filepath=result_filepath
             ) 
+        self.min_signal = min_signal
         
     def _run_analysis(self, df: pd.DataFrame): 
         """ Runs the fit_mot_number algorithm on all images, saves the images
@@ -48,7 +50,7 @@ class ImageAnalysis(Analysis):
             source = row["filepath"]
             filename = row["filename"]
             target = self.image_src + filename + self.image_extension
-            statistics = perform_analysis(source=source, target=target, mode="mot number")
+            statistics = perform_analysis(source=source, target=target, mode="mot number", min_signal=self.min_signal)
             statistics_list.append(statistics)
             
         # Enrich dataframe with results
@@ -77,6 +79,7 @@ if __name__=="__main__":
     image_analysis = ImageAnalysis(filepath="C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot", 
                                    match=".*ccd_.*.xlsx", 
                                    image_src="../../plots/20220829/images/",
-                                   result_filepath="../../results/20220829/"+"image_analysis_results.csv")
+                                   result_filepath="../../results/20220829/"+"image_analysis_results.csv",
+                                   min_signal=1e8)
     enriched_df = image_analysis.run()
     

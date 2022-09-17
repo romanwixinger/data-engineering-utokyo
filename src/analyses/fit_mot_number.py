@@ -26,7 +26,7 @@ import mot_constants_cmos as c_cmos
 
 
 # Settings
-c = c_ccd
+c = c_cmos
 
 
 class MOTMLE():
@@ -238,21 +238,45 @@ class MOTMLE():
         print("R^2 = ", statistics["R^2"])
         print("*******************")
         
-    def perform_analysis(self, source: str, target: str, mode: str): 
+    def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0): 
         """ Loads the image data, fits a 2D gaussian model on it, generates a plot
             of the original data and a fit, saves the plot, and returns the 
             statistics of the fit. 
             Source is the filepath of the original data and target is the filepath 
-            of the plot. The mode can be either 'power' or 'mot number'
+            of the plot. The mode can be either 'power' or 'mot number'. 
+            If the total sum of the df is less than min_signal, then we 
+            terminate the analysis. 
         """
+        # Load data
         df = self.load(source=source)
+        
+        # Input validation
+        rows = len(df.index)
+        columns = len(df.columns)
+    
+        # Check if the image is promising
+        total_sum = df.sum().sum() 
+        if total_sum < min_signal or rows != c_cmos.Xnum or columns != c_cmos.Ynum: 
+            return {
+                "fit_successful": False, 
+                "total_sum": total_sum, 
+                "enough_pulses": False,
+                }
+            
+        # Fit MLE
         data = self.preprocess(df, mode=mode)
         statistics = self.fitting(model=self.c.two_D_gauss, data=data, mode=mode)
+        statistics["total_sum"] = total_sum
+        statistics["enough_pulses"] = True
+        
+        # Plot 
         if statistics["fit_successful"]: 
             fit_data = self.generate_fit_data(self.c.two_D_gauss, data, statistics)
             self.plot_fit_result(data, fit_data, target=target, mode=mode)
         else: 
             self.just_plot_data(data, target=target, mode=mode)
+            
+        # Print and return statistics
         self.print_stats(statistics)
         return statistics
     
