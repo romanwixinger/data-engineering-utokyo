@@ -17,10 +17,11 @@ hbar= 1.054571817 * 10**(-34)     # Planck constant (Js)
 c = 299792458                     # Speed of light (m/s)
 
 # MOS
-Cell_xsize = 6.45 * 10**(-6)      # CCD Cell x size (m) -> TODO: CHECK
-Cell_ysize = 6.45 * 10**(-6)      # CCD Cell y size (m) -> TODO: CHECK
+Cell_xsize = 3.45 * 10**(-6)      # CCD Cell x size (m) -> TODO: CHECK
+Cell_ysize = 3.45 * 10**(-6)      # CCD Cell y size (m) -> TODO: CHECK
 T_exp = 50 * 10**(-6)             # Exposure time -> TODO: CHECK
-eta = 0.5                         # Quantum efficiency -> TODO: CHECK
+eta = 0.3                         # Quantum efficiency [Rb]
+eta_FR = 0.46                     # Quantum efficiency [Fr]
 b = 10/5.3277                     # Lens magnification -> TODO: CHECK
 
 # Atom
@@ -85,9 +86,9 @@ MOTnum_pulses_per_s_coef = Pow_pulses_per_s_coef / MOTnum_Pow_coef
 
 # Input data (observed csv data from new CCD camera) 
 Xmin = 0
-Xmax = 227
+Xmax = 504
 Ymin = 0 
-Ymax = 262
+Ymax = 504
 Xnum = Xmax - Xmin
 Ynum = Ymax - Ymin
 
