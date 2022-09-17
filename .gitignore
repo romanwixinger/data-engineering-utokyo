@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 *.png
 src/recorders/simulation.csv
+src/analyses/ssd_analysis_results.csv
