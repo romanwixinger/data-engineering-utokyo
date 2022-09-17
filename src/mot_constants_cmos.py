@@ -16,12 +16,12 @@ import numpy as np
 hbar= 1.054571817 * 10**(-34)     # Planck constant (Js)
 c = 299792458                     # Speed of light (m/s)
 
-# CCD 
-Cell_xsize = 6.45 * 10**(-6)      # CCD Cell x size (m)
-Cell_ysize = 6.45 * 10**(-6)      # CCD Cell y size (m)
-T_exp = 50 * 10**(-6)             # Exposure time
-eta = 0.5                         # Quantum efficiency
-b = 10/5.3277                     # Lens magnification
+# MOS
+Cell_xsize = 6.45 * 10**(-6)      # CCD Cell x size (m) -> TODO: CHECK
+Cell_ysize = 6.45 * 10**(-6)      # CCD Cell y size (m) -> TODO: CHECK
+T_exp = 50 * 10**(-6)             # Exposure time -> TODO: CHECK
+eta = 0.5                         # Quantum efficiency -> TODO: CHECK
+b = 10/5.3277                     # Lens magnification -> TODO: CHECK
 
 # Atom
 lambda_Rb = 780 * 10**(-9)          # Fluorescence wavelength (m)
@@ -83,11 +83,11 @@ MOTnum_pulses_per_s_coef = Pow_pulses_per_s_coef / MOTnum_Pow_coef
 # Conversion formula [PMT, Francium]
 
 
-# Input data (observed xlsx data from old CCD camera) 
-Xmin = 480
-Xmax = 560
-Ymin = 630
-Ymax = 810
+# Input data (observed csv data from new CCD camera) 
+Xmin = 0
+Xmax = 227
+Ymin = 0 
+Ymax = 262
 Xnum = Xmax - Xmin
 Ynum = Ymax - Ymin
 
