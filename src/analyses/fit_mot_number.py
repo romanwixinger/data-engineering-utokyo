@@ -14,6 +14,8 @@ Sources:
 import sys
 sys.path.insert(0,'..')
 
+import os
+from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
@@ -26,7 +28,7 @@ import mot_constants_cmos as c_cmos
 
 
 # Settings
-c = c_cmos
+c = c_ccd
 
 
 class MOTMLE():
@@ -161,7 +163,7 @@ class MOTMLE():
         fit_data = {"x": X, "y": Y, "z": fit_z}
         return fit_data
     
-    def plot_fit_result(self, data: dict, fit_data: dict, target: str, mode: str):
+    def plot_fit_result(self, data: dict, fit_data: dict, target: str, mode: str, time: str):
         """ Plots the 3d data and the fit. Saves the image to the url. 
         """
         # Setup figure
@@ -177,14 +179,16 @@ class MOTMLE():
                 linestyle='None', 
                 c="blue")   
     
-        # FPlot fitted data       
-        ax.plot_wireframe(fit_data["x"], 
-                          fit_data["y"], 
-                          fit_data["z"], 
-                          rstride=10, 
-                          cstride=10)
+        # Plot fitted data       
+        if fit_data is not None: 
+            ax.plot_wireframe(fit_data["x"], 
+                              fit_data["y"], 
+                              fit_data["z"], 
+                              rstride=10, 
+                              cstride=10)
             
         # Labels
+        ax.set_title(f"Image recorded at {time}")
         ax.set_xlabel('X (m)')
         ax.set_ylabel('Y (m)')
         ax.set_zlabel('Power (W)' if mode=="power" else 'Atom number [1/pixel]')
@@ -193,30 +197,12 @@ class MOTMLE():
         plt.savefig(target, dpi=300)
         plt.show(block=False)
         
-    def just_plot_data(self, data: dict, target: str, mode: str):
-        """ Plots the 3d data and the fit. Saves the image to the url. 
+    def time(self, source: str): 
+        """ Return the time when the file was created. 
         """
-        # Setup figure
-        fig = plt.figure()
-        ax = Axes3D(fig)
         
-        # Plot measured data 
-        ax.plot(data["x"], 
-                data["y"], 
-                data["z"], 
-                ms=3, 
-                marker="o",
-                linestyle='None', 
-                c="blue")   
-    
-        # Labels
-        ax.set_xlabel('X (m)')
-        ax.set_ylabel('Y (m)')
-        ax.set_zlabel('Power (W)' if mode=="power" else 'Atom number [1/pixel]')
-        
-        # Save image
-        plt.savefig(target, dpi=300)
-        plt.show(block=False)
+        timestamp = os.path.getctime(source)
+        return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     
     def print_stats(self, statistics: dict):
         if not statistics["fit_successful"]: 
@@ -250,13 +236,10 @@ class MOTMLE():
         # Load data
         df = self.load(source=source)
         
-        # Input validation
-        rows = len(df.index)
-        columns = len(df.columns)
-    
         # Check if the image is promising
         total_sum = df.sum().sum() 
-        if total_sum < min_signal or rows != c_cmos.Xnum or columns != c_cmos.Ynum: 
+        if total_sum < min_signal: 
+            print(f"The image was discarded because the total signal is {total_sum} < {min_signal}.")
             return {
                 "fit_successful": False, 
                 "total_sum": total_sum, 
@@ -270,12 +253,11 @@ class MOTMLE():
         statistics["enough_pulses"] = True
         
         # Plot 
-        if statistics["fit_successful"]: 
-            fit_data = self.generate_fit_data(self.c.two_D_gauss, data, statistics)
-            self.plot_fit_result(data, fit_data, target=target, mode=mode)
-        else: 
-            self.just_plot_data(data, target=target, mode=mode)
-            
+        time = self.time(source)
+        fit_data = self.generate_fit_data(self.c.two_D_gauss, data, statistics)\
+            if statistics["fit_successful"] else None
+        self.plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
+
         # Print and return statistics
         self.print_stats(statistics)
         return statistics
