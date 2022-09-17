@@ -18,6 +18,7 @@ This allows us to get visualizations for all peaks.
 import sys
 sys.path.insert(0,'..')
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
@@ -37,7 +38,8 @@ class SSDAnalysis(Analysis):
     
     def __init__(self, filepath: str, 
                  image_src: str="../../plots/",  
-                 image_extension: str=".png"):
+                 image_extension: str=".png",
+                 result_filepath: str="ssd_analysis_results.csv"):
         super(SSDAnalysis, self).__init__(
             recorder=SSDParser(filepath), 
             filepath=filepath, 
@@ -49,6 +51,8 @@ class SSDAnalysis(Analysis):
         self.peak_finder = PeakFinder(self.recorder)
         self.peak_nr = 0
         self.run_nr = 0
+        self.result_df = None
+        self.result_filepath = result_filepath
     
     def _run_analysis(self, df: pd.DataFrame):
         # 2D Histogram of PulsHeight vs Timestamp [Full view]
@@ -75,8 +79,18 @@ class SSDAnalysis(Analysis):
         for peak in peaks:
             self.peak_nr += 1
             peak.plot(self.image_src + f"Peak_{self.peak_nr}" + self.image_extension)
+            
+        # Update result df
+        new_result_df = self._get_new_result_df(peaks)
+        self._update_result_df(new_result_df)
+        
+        # Save or append to csv file
+        self._save(new_result_df)
+            
+        # Perform analysis on all results
+        self._analyze_results()
     
-        return
+        return self.result_df
     
     def _plot_overview(self, metadata):
         timestamps = metadata["timestamps"]
@@ -121,7 +135,34 @@ class SSDAnalysis(Analysis):
     
     def _ts_ns_to_timestamp(self, ts_list: list[int]): 
         return [dt.datetime.fromtimestamp(ts // 1000000000) for ts in ts_list]
- 
+    
+    def _get_new_result_df(self, peaks: list): 
+        if not peaks: 
+            return None
+        peak_dfs = [peak.as_dataframe() for peak in peaks]
+        return pd.concat(peak_dfs , ignore_index=True)
+    
+    def _update_result_df(self, new_result_df): 
+        """ Updates the result table adding new peaks and results the part which
+        """
+        if new_result_df is None:
+            return 
+        if self.result_df is None: 
+            self.result_df = new_result_df
+            return
+        self.result_df = pd.concat([self.result_df, new_result_df], ignore_index=True)
+        return self.result_df
+    
+    def _save(self, new_result_df: pd.DataFrame): 
+        """ Create if not exists else append. """
+        if os.path.exists(self.result_filepath): 
+            new_result_df.to_csv(self.result_filepath, mode="a", index=False, header=False)
+        else: 
+            new_result_df.to_csv(self.result_filepath, mode="w", index=False, header=True)
+            
+    def _analyze_results(self): 
+        pass
+    
     
 if __name__ == '__main__': 
     
