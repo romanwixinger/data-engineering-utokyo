@@ -7,7 +7,7 @@ Created on Wed Sep  7 09:43:50 2022
 Base class for analyses. 
 """
 
-
+import os
 from abc import abstractmethod
 import numpy as np
 import pandas as pd
@@ -26,29 +26,43 @@ class Analysis(object):
                  filepath, 
                  name, 
                  image_src: str="../../plots/", 
-                 image_extension: str=".png"): 
+                 image_extension: str=".png",
+                 result_filepath: str=""): 
         self.recorder = recorder
         self.filepath = filepath
         self.name = name
         self.last_updated = 0
         self.image_src = image_src
         self.image_extension = ".png"
+        self.result_filepath = result_filepath
         
     def run(self): 
         if self.is_up_to_date():
+            print(f"\n{self.name}: No new data -> Stop analysis")
             return
         df = self.recorder.get_table()
         self.last_updated = self.recorder.last_updated
+        if len(df.index) == 0: 
+            print(f"\n{self.name}: No new data -> Stop analysis")
+            return
+        print(f"\n{self.name}: New data -> Run analysis")
         return self._run_analysis(df)
     
-    def save(self, fig, filename): 
-        fig.savefig(fname = self.image_src + filename + self.image_extension)
-        
     def is_up_to_date(self): 
         return all((
             self.recorder.is_up_to_date(),
             self.last_updated == self.recorder.last_updated
             ))
+    
+    def save_fig(self, fig, filename): 
+        fig.savefig(fname = self.image_src + filename + self.image_extension)
+    
+    def save_results(self, new_result_df: pd.DataFrame): 
+        """ Create if not exists else append. """
+        if os.path.exists(self.result_filepath): 
+            new_result_df.to_csv(self.result_filepath, mode="a", index=False, header=False)
+        else: 
+            new_result_df.to_csv(self.result_filepath, mode="w", index=False, header=True)
     
     @abstractmethod
     def _run_analysis(self, df: pd.DataFrame): 

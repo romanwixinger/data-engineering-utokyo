@@ -25,19 +25,22 @@ class ImageAnalysis(Analysis):
     def __init__(self, filepath: str, 
                  image_src: str="../../plots/",  
                  image_extension: str=".png",
-                 match: str=".*ccd_detuning.*.xlsx"):
+                 match: str=".*ccd_detuning.*.xlsx",
+                 result_filepath: str=""):
         super(ImageAnalysis, self).__init__(
             recorder=ImageRecorder(filepath, match=match), 
             filepath=filepath, 
             name="Image Analysis",
             image_src=image_src, 
-            image_extension=image_extension
+            image_extension=image_extension,
+            result_filepath=result_filepath
             ) 
         
     def _run_analysis(self, df: pd.DataFrame): 
         """ Runs the fit_mot_number algorithm on all images, saves the images
             and saves the fit result in a new table. 
         """
+        
         statistics_list = []
         
         # Fit and plot
@@ -52,7 +55,7 @@ class ImageAnalysis(Analysis):
         enriched_df = self._enrich_df_with_statistics(df, statistics_list)
         
         # Save the result
-        self._save_df(enriched_df)
+        self.save_results(enriched_df)
         return enriched_df
     
     def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list[dict]) -> pd.DataFrame: 
@@ -68,20 +71,12 @@ class ImageAnalysis(Analysis):
                          for (i, row), stat in zip(df.iterrows(), statistics_list)]
         return pd.DataFrame(data=enriched_rows, columns=columns + new_columns + ["fit_successful"])
     
-    def _save_df(self, df): 
-        """ Save the enriched dataframe to an analysis subfolder. 
-        """
-        os.makedirs(f'{folder}/analysis', exist_ok=True)  
-        df.to_csv(f'{folder}/analysis/result.csv')  
     
 if __name__=="__main__": 
     
-    folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
-    match = ".*ccd_.*.xlsx"
-    image_src = "../../plots/images/"
-    
-    image_analysis = ImageAnalysis(filepath=folder, 
-                                   match=match, 
-                                   image_src=image_src)
+    image_analysis = ImageAnalysis(filepath="C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot", 
+                                   match=".*ccd_.*.xlsx", 
+                                   image_src="../../plots/20220829/images/",
+                                   result_filepath="../../results/20220829/"+"image_analysis_results.csv")
     enriched_df = image_analysis.run()
     

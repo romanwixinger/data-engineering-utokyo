@@ -45,14 +45,13 @@ class SSDAnalysis(Analysis):
             filepath=filepath, 
             name="SSD Analysis",
             image_src=image_src, 
-            image_extension=image_extension
+            image_extension=image_extension,
+            result_filepath = result_filepath
             ) 
-        self.peaks = []
         self.peak_finder = PeakFinder(self.recorder)
         self.peak_nr = 0
         self.run_nr = 0
         self.result_df = None
-        self.result_filepath = result_filepath
     
     def _run_analysis(self, df: pd.DataFrame):
         # 2D Histogram of PulsHeight vs Timestamp [Full view]
@@ -61,7 +60,7 @@ class SSDAnalysis(Analysis):
             x_column="timestamp",
             y_column="PulseHeight"
             )
-        self.save(fig, "SSD_Hist2D")
+        self.save_fig(fig, f"SSD_Overview_2D_{self.run_nr}")
         fig.show()
         
         # Find peaks
@@ -72,27 +71,30 @@ class SSDAnalysis(Analysis):
         # 1D Histogram of Peaks [Full view]
         fig = self._plot_overview(metadata)
         self.run_nr += 1
-        fig.savefig(fname=f"../../plots/Overview_all_peaks_{self.run_nr}.png")
+        self.save_fig(fig, f"SSD_Overview_1D_{self.run_nr}")
         plt.show()
         
         # 1D Histogram of all Peaks [Zoomed view]
         for peak in peaks:
             self.peak_nr += 1
-            peak.plot(self.image_src + f"Peak_{self.peak_nr}" + self.image_extension)
+            peak.plot(self.image_src + f"SSD_Peak_{self.peak_nr}" + self.image_extension)
             
-        # Update result df
+        # Combine new results to df
         new_result_df = self._get_new_result_df(peaks)
-        self._update_result_df(new_result_df)
         
-        # Save or append to csv file
-        self._save(new_result_df)
+        # Save or append the new results to csv
+        self.save_results(new_result_df)
+        
+        # Update the result df with the new results
+        self._update_result_df(new_result_df)
             
-        # Perform analysis on all results
+        # Perform analysis on result df
         self._analyze_results()
     
         return self.result_df
     
     def _plot_overview(self, metadata):
+        # Extract data
         timestamps = metadata["timestamps"]
         pulse_rates = metadata["pulse_rates"] # Convert [1/ns] to [1/s]
         peak_timestamps = metadata["peak_timestamps"]
@@ -137,28 +139,19 @@ class SSDAnalysis(Analysis):
         return [dt.datetime.fromtimestamp(ts // 1000000000) for ts in ts_list]
     
     def _get_new_result_df(self, peaks: list): 
-        if not peaks: 
-            return None
+        assert peaks, "In _SSDAnalysis._get_new_result_df() the input was None."
         peak_dfs = [peak.as_dataframe() for peak in peaks]
         return pd.concat(peak_dfs , ignore_index=True)
     
     def _update_result_df(self, new_result_df): 
         """ Updates the result table adding new peaks and results the part which
         """
-        if new_result_df is None:
-            return 
+        assert new_result_df is not None, "In _SSDAnalysis._update_result_df() the input was None."
         if self.result_df is None: 
             self.result_df = new_result_df
             return
         self.result_df = pd.concat([self.result_df, new_result_df], ignore_index=True)
-        return self.result_df
-    
-    def _save(self, new_result_df: pd.DataFrame): 
-        """ Create if not exists else append. """
-        if os.path.exists(self.result_filepath): 
-            new_result_df.to_csv(self.result_filepath, mode="a", index=False, header=False)
-        else: 
-            new_result_df.to_csv(self.result_filepath, mode="w", index=False, header=True)
+        return 
             
     def _analyze_results(self): 
         pass
@@ -168,8 +161,9 @@ if __name__ == '__main__':
     
     ssd_analysis = SSDAnalysis(
         filepath="../../data/20220829/-20220829-144945-Slot1-In1.csv",
-        image_src="../../plots/",
-        image_extension=".png"
+        image_src="../../plots/20220829/ssd/",
+        image_extension=".png",
+        result_filepath="../../results/20220829/"+"ssd_analysis_results.csv"
         )
     ssd_analysis.run()
 
