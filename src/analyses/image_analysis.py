@@ -15,7 +15,7 @@ sys.path.insert(0,'..')
 import pandas as pd
 import os
 
-from recorders.image_recorder import ImageRecorder
+from recorders.image_recorder import ImageParser
 from fit_mot_number import perform_analysis
 from analyses.analysis import Analysis
     
@@ -28,7 +28,7 @@ class ImageAnalysis(Analysis):
                  match: str=".*ccd_detuning.*.xlsx",
                  result_filepath: str=""):
         super(ImageAnalysis, self).__init__(
-            recorder=ImageRecorder(filepath, match=match), 
+            recorder=ImageParser(filepath, match=match), 
             filepath=filepath, 
             name="Image Analysis",
             image_src=image_src, 
