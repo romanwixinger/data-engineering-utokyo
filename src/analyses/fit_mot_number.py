@@ -132,13 +132,26 @@ class MOTMLE():
     def get_initial_guess(self, data: dict, mode: str): 
         """ Proposes initial guesses for the fitting parameters with heuristics. 
         """
-        x, y = data["x"], data["y"] 
+        x, y, z = data["x"], data["y"], data["z"] 
+        
+        # Give data points that are 2 sigma above average a high weight
+        mean_z = np.mean(z)
+        std_z = np.std(z)
+        only_peak = lambda x: 1.0 if x > mean_z + 2*std_z else 1e-9
+        pick_only_peak = np.vectorize(only_peak)
+        weights = pick_only_peak(z) 
         
         A = 6e5 if mode == "mot number" else 1e-6
-        mu_x = np.mean(x)
-        mu_y = np.mean(y)
-        sigma_x = np.std(x - mu_x * np.ones_like(x))
-        sigma_y = np.std(y - mu_y * np.ones_like(y))
+        mu_x = np.average(x, weights=weights)
+        mu_y = np.average(y, weights=weights)
+        sigma_x = np.sqrt(np.average((x - mu_x)**2, weights=weights))
+        sigma_y = np.sqrt(np.average((y - mu_y)**2, weights=weights))
+        
+        print("mu_x =", mu_x, "mean x =", np.mean(x))
+        print("mu_y =", mu_y, "mean y =", np.mean(y))
+        print("sigma_x =", sigma_x, "std_x =", np.std(x))
+        print("sigma_y =", sigma_y, "std_y =", np.std(y))
+        
         C = 1e2 if mode == "mot number" else 1e-12
         p0 = np.array([A, sigma_x, sigma_y, mu_x, mu_y, C])
         return p0
@@ -245,6 +258,7 @@ class MOTMLE():
                 "total_sum": total_sum, 
                 "enough_pulses": False,
                 }
+        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal}.")
             
         # Fit MLE
         data = self.preprocess(df, mode=mode)
