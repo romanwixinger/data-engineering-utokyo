@@ -134,8 +134,7 @@ class Peak(object):
         """
         
         return {
-            "ctime": self.timestamp,
-            "timestamp": self.timestamp,
+            "timestamp_ns": self.timestamp,
             "pulses_peak": self.pulses_peak, 
             "pulses_background": self.pulses_background,
             "half_life_time": self.half_life_time, 
