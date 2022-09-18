@@ -14,6 +14,7 @@ import time
 
 from analyses.ssd_analysis import SSDAnalysis
 from analyses.image_analysis import ImageAnalysis
+from analyses.mkdir import create_folders
 
 
 class Runner(object): 
@@ -42,14 +43,20 @@ class Runner(object):
     
 if __name__ == '__main__': 
     
+    date = "20220918"
+    starttime = "125158"
+    
     # Input 
-    ssd_file = "../../data/20220829/-20220829-144945-Slot1-In1.csv"
-    image_folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
-    match = ".*ccd_detuning.*.xlsx"
+    ssd_file = f"W:/WEDATA/data/-{date}-{starttime}-Slot1-In1.csv"
+    image_folder = "W:/mot_data/"
+    match = f".*{date}.*cmos_.*.csv"
     
     # Output 
-    plot_path = "../../plots/20220829/"
-    result_path = "../../results/20220829/"
+    plot_path = f"../../../plots/{date}_{starttime}/"
+    result_path = f"../../../results/{date}_{starttime}/"
+    
+    # Make dirs
+    create_folders(plot_path, result_path)
         
     runner = Runner(analyses=[
         SSDAnalysis(
@@ -61,7 +68,8 @@ if __name__ == '__main__':
         ImageAnalysis(filepath=image_folder, 
                     match=match, 
                     image_src=plot_path+"image/",
-                    result_filepath=result_path+"image_analysis_results.csv")
-        ])
+                    result_filepath=result_path+"image_analysis_results.csv",
+                    min_signal=6e6)
+        ][1:])
     
-    runner.run(cycles=3*60, period_s=5)
+    runner.run(cycles=3*12*60, period_s=5)
