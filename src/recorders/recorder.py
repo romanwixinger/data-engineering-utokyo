@@ -152,4 +152,10 @@ class Recorder(object):
     
     @abstractmethod
     def _harmonize_time(self): 
-        pass
+        if "ctime" in self._table_df.columns: 
+            self._table_df["timestamp"] = self._table_df["ctime"].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S.%f'))
+            self._table_df["datetime"] =  self._table_df["timestamp"].apply(pd.Timestamp)
+            self._table_df["datetime_μs"] = self._table_df["datetime"]
+            self._table_df["datetime_ms"] = self._table_df["datetime"].apply(lambda s: str(s)[:-3])
+        else: 
+            raise Exception("Recorder failed to harmonize time. Either provide a ctime column or override this method.")
