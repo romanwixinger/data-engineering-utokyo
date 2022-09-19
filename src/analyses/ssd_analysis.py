@@ -230,6 +230,10 @@ class SSDAnalysisWrapper(object):
         self._add_to_queue()
         
     def _add_to_queue(self): 
+        # Check if necessary
+        if self.filepath_recorder.is_up_to_date(): 
+            return
+        
         # Load new filepaths
         df = self.filepath_recorder.get_table()
         
