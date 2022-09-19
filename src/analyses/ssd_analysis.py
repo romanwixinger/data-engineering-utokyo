@@ -219,7 +219,7 @@ class SSDAnalysisWrapper(object):
             filepath=filepath, 
             image_src=image_src,
             image_extension=image_extension,
-            result_filepath=result_filepath
+            result_filepath=result_filepath+"ssd_analysis_results.csv"
             )
         self.active_analysis.run()
         
