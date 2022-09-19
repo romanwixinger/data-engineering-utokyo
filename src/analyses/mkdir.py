@@ -17,3 +17,9 @@ def create_folders(plot_path: str, result_path: str):
         
     if not os.path.isdir(result_path): 
         os.mkdir(result_path)
+        
+
+def mkdir_if_not_exist(path: str): 
+    if not os.path.isdir(path): 
+        os.mkdir(path)
+        
