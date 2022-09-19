@@ -210,6 +210,34 @@ class MOTMLE():
         plt.savefig(target, dpi=300)
         plt.show(block=False)
         
+    def plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str):
+        """ Plots the 3d data and the fit. Saves the image to the url. 
+        """
+        
+        # Setup figure
+        z = data["z"]
+        z_arr = z.reshape((self.c.Ynum, self.c.Xnum))
+        
+        if fit_data is None: 
+            fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3),
+                            subplot_kw={'xticks': [], 'yticks': []})
+    
+            ax.imshow(z_arr, cmap='hot', interpolation='nearest')
+            ax.set_title("Camera signal")
+        else: 
+            z_fit = fit_data["z"]
+            z_arr_fit = z_fit.reshape((200, 200))
+            fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(9, 6),
+                            subplot_kw={'xticks': [], 'yticks': []})
+            
+            for ax, arr, title in zip(axs, [z_arr, z_arr_fit], ["Camera signal", "Fit"]): 
+                ax.imshow(arr, cmap='hot', interpolation='nearest')
+                ax.set_title(title)
+    
+        plt.tight_layout()
+        plt.savefig(target, dpi=300)
+        plt.show()   
+        
     def time(self, source: str): 
         """ Return the time when the file was created. 
         """
@@ -266,11 +294,15 @@ class MOTMLE():
         statistics["total_sum"] = total_sum
         statistics["enough_pulses"] = True
         
-        # Plot 
+        # Plot 3D
         time = self.time(source)
         fit_data = self.generate_fit_data(self.c.two_D_gauss, data, statistics)\
             if statistics["fit_successful"] else None
         self.plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
+        
+        # Plot heatmap
+        heatmap_target = target[:-4] + "_heatmap" + target[-4:] 
+        self.plot_heatmap(data, fit_data, target=heatmap_target, mode=mode, time=time)
 
         # Print and return statistics
         self.print_stats(statistics)
@@ -286,7 +318,7 @@ perform_analysis = mot_mle.perform_analysis
 if __name__=="__main__":
     
     for i in list(range(1, 10)): 
-        for mode in ["mot number", "power"]: 
+        for mode in ["mot number"]: 
             source = f"C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\images\\ccd_detuning0{i}.xlsx"
             target = f"fit_{mode}_{i}.png"
             perform_analysis(source, target, mode)
