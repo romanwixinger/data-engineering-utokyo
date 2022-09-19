@@ -41,6 +41,7 @@ class Analysis(object):
             print(f"\n{self.name}: No new data -> Stop analysis")
             return
         df = self.recorder.get_table()
+        df = self._query_df(df)
         self.last_updated = self.recorder.last_updated
         if len(df.index) == 0: 
             print(f"\n{self.name}: No new data -> Stop analysis")
@@ -63,6 +64,14 @@ class Analysis(object):
             new_result_df.to_csv(self.result_filepath, mode="a", index=False, header=False)
         else: 
             new_result_df.to_csv(self.result_filepath, mode="w", index=False, header=True)
+       
+    @abstractmethod
+    def _query_df(self, df: pd.DataFrame) -> pd.DataFrame(): 
+        """ Narrows down the rows on which we want to perform the analysis. 
+            Example: Only select rows in certain time range. 
+            The extra parameters can be designed as child class members. 
+        """
+        return df
     
     @abstractmethod
     def _run_analysis(self, df: pd.DataFrame): 

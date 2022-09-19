@@ -12,6 +12,7 @@ number and the power. The reports are then a collection of results as a table.
 import sys
 sys.path.insert(0,'..')
 
+from datetime import datetime
 import pandas as pd
 import os
 
@@ -27,7 +28,9 @@ class ImageAnalysis(Analysis):
                  image_extension: str=".png",
                  match: str=".*ccd_detuning.*.xlsx",
                  result_filepath: str="",
-                 min_signal: int=0):
+                 min_signal: int=0,
+                 time_interval: tuple=(datetime(2000, 1, 1, 12, 0, 0), 
+                                       datetime(2030, 1, 1, 12, 0, 0))):
         super(ImageAnalysis, self).__init__(
             recorder=ImageParser(filepath, match=match), 
             filepath=filepath, 
@@ -36,7 +39,15 @@ class ImageAnalysis(Analysis):
             image_extension=image_extension,
             result_filepath=result_filepath
             ) 
+        self.time_interval = time_interval
         self.min_signal = min_signal
+        
+    def _query_df(self, df: pd.DataFrame) -> pd.DataFrame(): 
+            """ Narrows down the rows to the one in the time interval. 
+            """
+            start = self.time_interval[0]
+            stop = self.time_interval[1]
+            return df[(start <= df.datetime) & (df.datetime <= stop)]
         
     def _run_analysis(self, df: pd.DataFrame): 
         """ Runs the fit_mot_number algorithm on all images, saves the images
