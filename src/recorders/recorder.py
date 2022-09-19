@@ -153,29 +153,4 @@ class Recorder(object):
     
     @abstractmethod
     def _harmonize_time(self): 
-        # Input validation
-        columns = self._table_df.columns
-        print(columns)
-        if "ctime" not in columns and "timestamp_ns" not in columns and "Time" not in columns:
-            raise Exception("""Recorder failed to harmonize time. 
-                               Either provide a ctime (9 digit) or 
-                               timestamp (18 digit) column or 
-                               override this method.""")
-        
-        # Generate timestamp 
-        if "ctime" in columns: 
-            self._table_df["timestamp"] = self._table_df["ctime"]\
-                .apply(lambda x: datetime.datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S.%f'))
-                
-        elif "timestamp_ns" in columns: 
-            self._table_df["timestamp"] = self._table_df["timestamp_ns"]\
-                .apply(lambda x: datetime.datetime.fromtimestamp(x / 1000000000).strftime('%Y-%m-%d %H:%M:%S.%f'))
-                
-        elif "Time" in columns: 
-            self._table_df["timestamp"] = pd.to_datetime(self._table_df["Time"], errors='coerce')\
-                .dt.strftime('%Y-%m-%d %H:%M:%S.%f')
-                
-        # Generate datetime
-        self._table_df["datetime"] =  self._table_df["timestamp"].apply(pd.Timestamp)
-        self._table_df["datetime_μs"] = self._table_df["datetime"]
-        self._table_df["datetime_ms"] = self._table_df["datetime"].apply(lambda s: str(s)[:-3])
+        pass

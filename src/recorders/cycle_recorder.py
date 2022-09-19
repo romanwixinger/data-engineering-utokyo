@@ -18,24 +18,8 @@ import sys
 sys.path.insert(0,'..')
 
 from recorders.recorder import Recorder
+from recorders.result_recorder import Recorder, SSDResultsRecorder, ImageResultsRecorder, ParameterRecorder
 
-
-class SSDResultsRecorder(Recorder):
-    """ Tracks the result file of the SSD Analysis. 
-    """
-    pass
-
-
-class ImageResultsRecorder(Recorder): 
-    """ Tracks the result file of the ImageAnalysis. 
-    """
-    pass
-
-
-class ParameterRecorder(Recorder): 
-    """ Tracks the parameter settings of each cycle. 
-    """
-    pass
 
 class CycleRecorder(Recorder): 
     """ Tracks all results and combines them into one dataframe. 
