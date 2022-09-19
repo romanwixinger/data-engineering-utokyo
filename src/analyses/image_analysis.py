@@ -68,7 +68,7 @@ class ImageAnalysis(Analysis):
         enriched_df = self._enrich_df_with_statistics(df, statistics_list)
         
         # Save the result
-        self.save_results(enriched_df)
+        self._save_results(enriched_df)
         return enriched_df
     
     def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list[dict]) -> pd.DataFrame: 

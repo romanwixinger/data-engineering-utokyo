@@ -55,10 +55,10 @@ class Analysis(object):
             self.last_updated == self.recorder.last_updated
             ))
     
-    def save_fig(self, fig, filename): 
+    def _save_fig(self, fig, filename): 
         fig.savefig(fname = self.image_src + filename + self.image_extension)
     
-    def save_results(self, new_result_df: pd.DataFrame): 
+    def _save_results(self, new_result_df: pd.DataFrame): 
         """ Create if not exists else append. """
         if os.path.exists(self.result_filepath): 
             new_result_df.to_csv(self.result_filepath, mode="a", index=False, header=False)

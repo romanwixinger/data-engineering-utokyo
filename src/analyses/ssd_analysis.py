@@ -24,11 +24,14 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import pandas as pd
 import datetime as dt
+import queue
 
 import constants as c
 from recorders.ssd_recorder import SSDParser
+from recorders.image_recorder import ImageParser
 from analyses.analysis import Analysis
 from analyses.peak_finder import PeakFinder
+from analyses.mkdir import mkdir_if_not_exist
 
 
 plt.rcParams.update(c.plotting_params)
@@ -60,7 +63,7 @@ class SSDAnalysis(Analysis):
             x_column="timestamp",
             y_column="PulseHeight"
             )
-        self.save_fig(fig, f"SSD_Overview_2D_{self.run_nr}")
+        self._save_fig(fig, f"SSD_Overview_2D_{self.run_nr}")
         fig.show()
         
         # Find peaks
@@ -71,7 +74,7 @@ class SSDAnalysis(Analysis):
         # 1D Histogram of Peaks [Full view]
         fig = self._plot_overview(metadata)
         self.run_nr += 1
-        self.save_fig(fig, f"SSD_Overview_1D_{self.run_nr}")
+        self._save_fig(fig, f"SSD_Overview_1D_{self.run_nr}")
         plt.show()
         
         # 1D Histogram of all Peaks [Zoomed view]
@@ -83,7 +86,7 @@ class SSDAnalysis(Analysis):
         new_result_df = self._get_new_result_df(peaks)
         
         # Save or append the new results to csv
-        self.save_results(new_result_df)
+        self._save_results(new_result_df)
         
         # Update the result df with the new results
         self._update_result_df(new_result_df)
@@ -157,13 +160,113 @@ class SSDAnalysis(Analysis):
         pass
     
     
+class SSDAnalysisWrapper(object):
+    """
+    Solves the problem that we have many ssd csv file and not just one. 
+    Keeps track of the csv files that match a certain pattern in a certain 
+    timespan and applies the SSDAnalysis on them 1 by 1. 
+    
+    Implements the same public methods as the Analysis class, such that it can
+    be used in Runner. 
+    """
+    
+    def __init__(self, 
+                 folder: str="", 
+                 result_path: str="", 
+                 plot_path: str="",
+                 image_extension: str="",
+                 time_interval: tuple=(
+                     dt.datetime(2000, 1, 1, 12, 0, 0), 
+                     dt.datetime(2030, 1, 1, 12, 0, 0)
+                     )): 
+        self.filepath_recorder = ImageParser(
+            filepath=folder, 
+            match=".*Slot.*.csv"
+            )
+        self.result_path = result_path
+        self.plot_path = plot_path
+        self.image_extension = image_extension
+        self.time_interval = time_interval
+        self.filepath_queue = queue.Queue()
+        self.active_analysis = None
+
+    def run(self): 
+        # Case: There is an active analysis
+        if self.active_analysis is not None: 
+            self.active_analysis.run()
+            if self.active_analysis.is_up_to_date():
+                self.active_analysis = None
+                
+        # Case: We start a new analysis
+        self._update()
+        if self.filepath_queue.empty(): 
+            return
+        
+        # Get filepath 
+        filepath = self.filepath_queue.get()
+        
+        # Create parameters and folders
+        image_extension=".png",
+        result_filepath = self.result_path
+        image_src= self.plot_path + f"{os.path.basename(filepath)}/" + "ssd/"
+        mkdir_if_not_exist(self.plot_path)
+        mkdir_if_not_exist(self.plot_path + f"{os.path.basename(filepath)}/")
+        mkdir_if_not_exist(image_src)
+        
+        # Run analysis
+        self.active_analysis = SSDAnalysis(
+            filepath=filepath, 
+            image_src=image_src,
+            image_extension=image_extension,
+            result_filepath=result_filepath
+            )
+        self.active_analysis.run()
+                
+        
+    def is_up_to_date(self): 
+        return self.filepath_queue.empty() and self.active_analysis == None
+    
+    def _update(self): 
+        self._add_to_queue()
+        
+    def _add_to_queue(self): 
+        # Load new filepaths
+        df = self.filepath_recorder.get_table()
+        
+        # Select filepaths from the right time
+        start = self.time_interval[0]
+        stop = self.time_interval[1]
+        df = df[(start <= df.datetime) & (df.datetime <= stop)]
+        
+        # Stop if there are no new filepaths
+        if len(df.index) == 0: 
+            return 
+        
+        # Add filepaths to queue
+        for filepath in df["filepath"]: 
+            self.filepath_queue.put(filepath)
+    
+    
 if __name__ == '__main__': 
     
+    """
     ssd_analysis = SSDAnalysis(
-        filepath="../../data/20220829/-20220829-144945-Slot1-In1.csv",
-        image_src="../../plots/20220829/ssd/",
+        filepath="../../data/sample/-20220314-100806-Slot1-In2.csv",
+        image_src="../../plots/20220314/ssd/",
         image_extension=".png",
-        result_filepath="../../results/20220829/"+"ssd_analysis_results.csv"
+        result_filepath="../../results/20220314/"+"ssd_analysis_results.csv"
         )
     ssd_analysis.run()
-
+    """
+    
+    ssd_wrapper = SSDAnalysisWrapper(
+        folder="../../data/sample/", 
+        result_path="../../results/20220314/"+"ssd_analysis_results.csv",
+        plot_path="../../plots/20220829/",
+        image_extension=".png",
+        time_interval=(
+            dt.datetime(2000, 1, 1, 12, 0, 0), 
+            dt.datetime(2030, 1, 1, 12, 0, 0)
+        ))
+    ssd_wrapper.run()
+    ssd_wrapper.run()
