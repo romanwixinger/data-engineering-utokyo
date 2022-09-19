@@ -175,13 +175,14 @@ class SSDAnalysisWrapper(object):
                  result_path: str="", 
                  plot_path: str="",
                  image_extension: str="",
+                 match: str="",
                  time_interval: tuple=(
                      dt.datetime(2000, 1, 1, 12, 0, 0), 
                      dt.datetime(2030, 1, 1, 12, 0, 0)
                      )): 
         self.filepath_recorder = ImageParser(
             filepath=folder, 
-            match=".*Slot.*.csv"
+            match=match
             )
         self.result_path = result_path
         self.plot_path = plot_path
@@ -221,7 +222,6 @@ class SSDAnalysisWrapper(object):
             result_filepath=result_filepath
             )
         self.active_analysis.run()
-                
         
     def is_up_to_date(self): 
         return self.filepath_queue.empty() and self.active_analysis == None
@@ -264,6 +264,7 @@ if __name__ == '__main__':
         result_path="../../results/20220314/"+"ssd_analysis_results.csv",
         plot_path="../../plots/20220829/",
         image_extension=".png",
+        match=".*Slot.*.csv",
         time_interval=(
             dt.datetime(2000, 1, 1, 12, 0, 0), 
             dt.datetime(2030, 1, 1, 12, 0, 0)
