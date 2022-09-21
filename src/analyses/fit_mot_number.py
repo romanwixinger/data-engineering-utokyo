@@ -7,6 +7,11 @@ Created on Fri Sep  9 16:37:36 2022
 
 Extraction of the MOT number and power from SSD images. 
 
+Takes dataframes with image data and some references dataframes from the 
+same camera with just noise. Estimates the dead pixels and subtracts them
+from the images. Performs Maximum Likelihood Estimation (MLE) with a 
+2D Gaussian model in the image data and plot a 3D view and a 2D heatmap. 
+
 Sources: 
 - https://rikei-fufu.com/2020/07/05/post-3270-fitting/
 """
@@ -33,8 +38,9 @@ c = c_ccd
 
 class MOTMLE():
     
-    def __init__(self, c): 
+    def __init__(self, c, reference_dfs: list[pd.DataFrame]): 
         self.c = c
+        self.dead_pixels = None
 
     def load(self, source: str) -> pd.DataFrame: 
         """ Load the pandas dataframe and the right constants. """
@@ -43,6 +49,14 @@ class MOTMLE():
         else: 
             df = pd.read_csv(source, index_col=None, header=None)
         return df
+
+    def find_dead_pixels(self): 
+        """ TODO: Implement method which takes the reference dfs and finds the 
+            pixels which always have the same value. Create a vectorized 
+            method which subtract this noise. 
+        """
+        pass
+        
     
     def preprocess(self, df: pd.DataFrame, mode: str): 
         """ Takes the ssd image data as pandas dataframe and converts into 
