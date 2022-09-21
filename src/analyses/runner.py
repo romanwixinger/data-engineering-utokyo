@@ -12,10 +12,6 @@ sys.path.insert(0,'..')
 
 import time
 
-from analyses.ssd_analysis import SSDAnalysis
-from analyses.image_analysis import ImageAnalysis
-from analyses.mkdir import create_folders
-
 
 class Runner(object): 
     
@@ -41,35 +37,3 @@ class Runner(object):
         return start + period_s * i
         
     
-if __name__ == '__main__': 
-    
-    date = "20220918"
-    starttime = "125158"
-    
-    # Input 
-    ssd_file = f"W:/WEDATA/data/-{date}-{starttime}-Slot1-In1.csv"
-    image_folder = "W:/mot_data/"
-    match = f".*{date}.*cmos_.*.csv"
-    
-    # Output 
-    plot_path = f"../../../plots/{date}_{starttime}/"
-    result_path = f"../../../results/{date}_{starttime}/"
-    
-    # Make dirs
-    create_folders(plot_path, result_path)
-        
-    runner = Runner(analyses=[
-        SSDAnalysis(
-            filepath=ssd_file ,
-            image_src=plot_path + "ssd/",
-            image_extension=".png",
-            result_filepath=result_path+"ssd_analysis_results.csv"
-            ),
-        ImageAnalysis(filepath=image_folder, 
-                    match=match, 
-                    image_src=plot_path+"image/",
-                    result_filepath=result_path+"image_analysis_results.csv",
-                    min_signal=6e6)
-        ][1:])
-    
-    runner.run(cycles=3*12*60, period_s=5)
