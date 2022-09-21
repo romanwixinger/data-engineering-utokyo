@@ -28,8 +28,8 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-import mot_constants as c_ccd
-import mot_constants_cmos as c_cmos
+import constants.mot_constants as c_ccd
+import constants.mot_constants_cmos as c_cmos
 
 
 # Settings
@@ -325,7 +325,7 @@ class MOTMLE():
     
 """ Default instance """
 
-mot_mle = MOTMLE(c=c)
+mot_mle = MOTMLE(c=c, reference_dfs=[])
 perform_analysis = mot_mle.perform_analysis
     
 

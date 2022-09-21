@@ -26,7 +26,7 @@ import pandas as pd
 import datetime as dt
 import queue
 
-import constants as c
+import constants.constants as c
 from recorders.ssd_recorder import SSDRecorder, SSDParser
 from recorders.file_recorder import FileParser
 from analyses.analysis import Analysis, ResultParameter

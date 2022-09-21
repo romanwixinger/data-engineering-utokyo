@@ -19,7 +19,7 @@ import matplotlib.dates as md
 import datetime as dt
 import math
 
-from constants import plotting_params
+from constants.constants import plotting_params
 plt.rcParams.update(plotting_params)
 
 

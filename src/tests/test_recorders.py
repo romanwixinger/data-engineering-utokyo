@@ -8,7 +8,7 @@ import unittest
 import pandas as pd
 from shutil import copy
 
-from constants import unittest_short_loc, unittest_long_loc
+from constants.constants import unittest_short_loc, unittest_long_loc
 
 from recorders.ssd_recorder import SSDRecorder
 from recorders.pmt_recorder import PMTRecorder

@@ -85,16 +85,16 @@ MOTnum_pulses_per_s_coef = Pow_pulses_per_s_coef / MOTnum_Pow_coef
 
 
 # Input data (observed csv data from new CCD camera) 
-Xmin = 0
-Xmax = 504
-Ymin = 0 
-Ymax = 504
+Xmin = 0            # Region of interest -> 175
+Xmax = 504          # Region of interest -> 232
+Ymin = 0            # Region of interest -> 233 
+Ymax = 504          # Region of interest -> 290
 Xnum = Xmax - Xmin
 Ynum = Ymax - Ymin
 
 
-# Functions
 
+# Functions
 def convert_pulse_rate_to_MOT(pulse_rate: float, with_beamsplitter: bool): 
     """ Takes the pulse rate [1/s] of the PMT and whether or not a beamsplitter 
         was applied. Returns the MOT number. 
