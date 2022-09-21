@@ -69,8 +69,6 @@ class ImageRecorder(Recorder):
     def _harmonize_time(self): 
         self._table_df["timestamp"] = self._table_df["ctime"].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S.%f'))
         self._table_df["datetime"] =  self._table_df["timestamp"].apply(pd.Timestamp)
-        self._table_df["datetime_μs"] = self._table_df["datetime"]
-        self._table_df["datetime_ms"] = self._table_df["datetime"].apply(lambda s: str(s)[:-3])
        
         
 class ImageParser(ImageRecorder):

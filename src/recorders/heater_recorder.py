@@ -62,7 +62,5 @@ class HeaterRecorder(Recorder):
     
     def _harmonize_time(self): 
         self._table_df["datetime"] = self._table_df["Date"].apply(lambda s: s.replace("/", "-")) + " " + self._table_df["Time"]
-        self._table_df["datetime_μs"] = self._table_df["datetime"].apply(lambda s: s+".000000")
-        self._table_df["datetime_ms"] = self._table_df["datetime"].apply(lambda s: s+".000")
-        self._table_df["timestamp"] = self._table_df["datetime_ms"].apply(pd.Timestamp).values.astype(np.int64)
+        self._table_df["timestamp"] = self._table_df["datetime"].apply(pd.Timestamp).values.astype(np.int64)
         
