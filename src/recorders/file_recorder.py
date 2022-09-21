@@ -4,8 +4,8 @@ Created on Tue Sep 13 16:35:17 2022
 
 @author: Roman Wixinger (roman.wixinger@gmail.com)
 
-Keeps track of the available image data from the SSD and the corresponding 
-metadata. 
+Keeps track of the available files. Use cases include the image data from the 
+CMOS camera and the SSD data. 
 """
 
 
@@ -21,10 +21,10 @@ from recorders.recorder import Recorder
 from analyses.path_helper import PathHelper 
 
 
-class ImageRecorder(Recorder): 
+class FileRecorder(Recorder): 
     
-    def __init__(self, filepath: str, always_update: bool=False, match: str=".*ccd_detuning.*.xlsx"):
-        super(ImageRecorder, self).__init__(
+    def __init__(self, filepath: str, always_update: bool=False, match: str=""):
+        super(FileRecorder, self).__init__(
             filepath=filepath, 
             has_metadata=False, 
             always_update=always_update
@@ -71,7 +71,7 @@ class ImageRecorder(Recorder):
         self._table_df["datetime"] =  self._table_df["timestamp"].apply(pd.Timestamp)
        
         
-class ImageParser(ImageRecorder):
+class FileParser(FileRecorder):
     """ Like the ImageRecorder but on each evaluation of get_table(), 
         the parser forgets the old data and just returns the new one. 
     """
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
     match = ".*ccd_detuning.*.xlsx"
     
-    image_recorder = ImageParser(filepath=folder, match=match)
+    image_recorder = FileParser(filepath=folder, match=match)
     df = image_recorder.get_table()
     for col in df.columns: 
         print(col, df[col])
