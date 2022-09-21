@@ -14,27 +14,25 @@ sys.path.insert(0,'..')
 import pandas as pd
 
 from recorders.pmt_recorder import PMTRecorder
-from analyses.analysis import Analysis
+from analyses.analysis import Analysis, ResultParameter
 
 
 class PMTAnalysis(Analysis): 
     
-    def __init__(self, filepath: str,
-                 image_src: str="../../plots/",  
-                 image_extension: str=".png"): 
+    def __init__(self, 
+                 recorder: PMTRecorder,
+                 result_param: ResultParameter): 
         super(PMTAnalysis, self).__init__(
-            recorder=PMTRecorder(filepath), 
-            filepath=filepath, 
+            recorder=recorder,
             name="PMT Analysis",
-            image_src=image_src, 
-            image_extension=image_extension
+            result_param=result_param
             )
     
     def _run_analysis(self, df): 
         self._2d_hist_coil_on(df)
         self._2d_hist_coil_off(df)
         fig = self._plot_1d_hist(x_column="timestamp", bin_nr=100) 
-        self.save(fig, "PMT_Hist1D")
+        self._save_fig(fig, "PMT_Hist1D")
         return
         
     def _2d_hist_coil_on(self, df: pd.DataFrame): 
@@ -45,7 +43,7 @@ class PMTAnalysis(Analysis):
             y_column="PMT Current (A)", 
             title_addition="Coil on"
             )
-        self.save(fig, "PMT_Hist2D_Coil_on")
+        self._save_fig(fig, "PMT_Hist2D_Coil_on")
         return
 
     def _2d_hist_coil_off(self, df: pd.DataFrame): 
@@ -56,7 +54,7 @@ class PMTAnalysis(Analysis):
             y_column="PMT Current (A)", 
             title_addition="Coil off"
             )
-        self.save(fig, "PMT_Hist2D_Coil_off")
+        self._save_fig(fig, "PMT_Hist2D_Coil_off")
         return
     
     def _query_coil_off(self, df: pd.DataFrame): 
@@ -68,5 +66,9 @@ class PMTAnalysis(Analysis):
     
 if __name__ == '__main__': 
     
-    pmt_analysis = PMTAnalysis(filepath = "../../data/sample/all_data.csv")
+    pmt_recorder = PMTRecorder(filepath = "../../data/sample/all_data.csv")
+    result_param = ResultParameter(image_src="", 
+                                   image_extension=".png",
+                                   result_filepath="../../results/"+"pmt_analysis_results.csv",)
+    pmt_analysis = PMTAnalysis(recorder=pmt_recorder, result_param=result_param)
     pmt_analysis.run()

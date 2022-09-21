@@ -27,9 +27,9 @@ import datetime as dt
 import queue
 
 import constants as c
-from recorders.ssd_recorder import SSDParser
+from recorders.ssd_recorder import SSDRecorder, SSDParser
 from recorders.image_recorder import ImageParser
-from analyses.analysis import Analysis
+from analyses.analysis import Analysis, ResultParameter
 from analyses.peak_finder import PeakFinder
 from analyses.mkdir import mkdir_if_not_exist
 
@@ -39,17 +39,13 @@ plt.rcParams.update(c.plotting_params)
 
 class SSDAnalysis(Analysis): 
     
-    def __init__(self, filepath: str, 
-                 image_src: str="../../plots/",  
-                 image_extension: str=".png",
-                 result_filepath: str="ssd_analysis_results.csv"):
+    def __init__(self, 
+                 recorder: SSDRecorder or SSDParser,
+                 result_param: ResultParameter):
         super(SSDAnalysis, self).__init__(
-            recorder=SSDParser(filepath), 
-            filepath=filepath, 
+            recorder=recorder, 
             name="SSD Analysis",
-            image_src=image_src, 
-            image_extension=image_extension,
-            result_filepath = result_filepath
+            result_param=result_param
             ) 
         self.peak_finder = PeakFinder(self.recorder)
         self.peak_nr = 0
@@ -207,7 +203,7 @@ class SSDAnalysisWrapper(object):
         filepath = self.filepath_queue.get()
         
         # Create parameters and folders
-        image_extension=".png",
+        image_extension=self.image_extension
         result_filepath = self.result_path
         image_src= self.plot_path + f"{os.path.basename(filepath)}/" + "ssd/"
         mkdir_if_not_exist(self.plot_path)
@@ -215,11 +211,14 @@ class SSDAnalysisWrapper(object):
         mkdir_if_not_exist(image_src)
         
         # Run analysis
-        self.active_analysis = SSDAnalysis(
-            filepath=filepath, 
-            image_src=image_src,
+        result_param = ResultParameter(
+            image_src=image_src, 
             image_extension=image_extension,
             result_filepath=result_filepath+"ssd_analysis_results.csv"
+            )
+        self.active_analysis = SSDAnalysis(
+            recorder=SSDParser(filepath),
+            result_param=result_param
             )
         self.active_analysis.run()
         

@@ -16,28 +16,22 @@ from datetime import datetime
 import pandas as pd
 import os
 
-from recorders.image_recorder import ImageParser
+from recorders.image_recorder import ImageRecorder, ImageParser
 from fit_mot_number import perform_analysis
-from analyses.analysis import Analysis
+from analyses.analysis import Analysis, ResultParameter
     
     
 class ImageAnalysis(Analysis): 
     
-    def __init__(self, filepath: str, 
-                 image_src: str="../../plots/",  
-                 image_extension: str=".png",
-                 match: str=".*ccd_detuning.*.xlsx",
-                 result_filepath: str="",
-                 min_signal: int=0,
-                 time_interval: tuple=(datetime(2000, 1, 1, 12, 0, 0), 
-                                       datetime(2030, 1, 1, 12, 0, 0))):
+    def __init__(self,
+                 recorder: ImageRecorder or ImageParser,
+                 result_param: ResultParameter,
+                 time_interval: tuple,
+                 min_signal: int):
         super(ImageAnalysis, self).__init__(
-            recorder=ImageParser(filepath, match=match), 
-            filepath=filepath, 
             name="Image Analysis",
-            image_src=image_src, 
-            image_extension=image_extension,
-            result_filepath=result_filepath
+            recorder=recorder, 
+            result_param=result_param
             ) 
         self.time_interval = time_interval
         self.min_signal = min_signal
