@@ -28,7 +28,7 @@ import queue
 
 import constants as c
 from recorders.ssd_recorder import SSDRecorder, SSDParser
-from recorders.image_recorder import ImageParser
+from recorders.file_recorder import FileParser
 from analyses.analysis import Analysis, ResultParameter
 from analyses.peak_finder import PeakFinder
 from analyses.mkdir import mkdir_if_not_exist
@@ -176,7 +176,7 @@ class SSDAnalysisWrapper(object):
                      dt.datetime(2000, 1, 1, 12, 0, 0), 
                      dt.datetime(2030, 1, 1, 12, 0, 0)
                      )): 
-        self.filepath_recorder = ImageParser(
+        self.filepath_recorder = FileParser(
             filepath=folder, 
             match=match
             )

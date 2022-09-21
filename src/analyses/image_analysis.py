@@ -12,11 +12,9 @@ number and the power. The reports are then a collection of results as a table.
 import sys
 sys.path.insert(0,'..')
 
-from datetime import datetime
 import pandas as pd
-import os
 
-from recorders.image_recorder import ImageRecorder, ImageParser
+from recorders.file_recorder import FileRecorder, FileParser
 from fit_mot_number import perform_analysis
 from analyses.analysis import Analysis, ResultParameter
     
@@ -24,10 +22,10 @@ from analyses.analysis import Analysis, ResultParameter
 class ImageAnalysis(Analysis): 
     
     def __init__(self,
-                 recorder: ImageRecorder or ImageParser,
+                 recorder: FileRecorder or FileParser,
                  result_param: ResultParameter,
-                 time_interval: tuple,
-                 min_signal: int):
+                 time_interval: tuple=None,
+                 min_signal: int=0):
         super(ImageAnalysis, self).__init__(
             name="Image Analysis",
             recorder=recorder, 
@@ -39,6 +37,8 @@ class ImageAnalysis(Analysis):
     def _query_df(self, df: pd.DataFrame) -> pd.DataFrame(): 
             """ Narrows down the rows to the one in the time interval. 
             """
+            if self.time_interval is None: 
+                return df
             start = self.time_interval[0]
             stop = self.time_interval[1]
             return df[(start <= df.datetime) & (df.datetime <= stop)]
@@ -81,10 +81,18 @@ class ImageAnalysis(Analysis):
     
 if __name__=="__main__": 
     
-    image_analysis = ImageAnalysis(filepath="C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot", 
-                                   match=".*ccd_.*.xlsx", 
-                                   image_src="../../plots/20220829/images/",
-                                   result_filepath="../../results/20220829/"+"image_analysis_results.csv",
-                                   min_signal=1e8)
+    result_param = ResultParameter(
+        image_src="../../plots/20220829/images/",
+        image_extension=".png",
+        result_filepath="../../results/20220829/"+"image_analysis_results.csv"
+        )
+    file_recorder = FileRecorder(
+        filepath="C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\",
+        match=".*ccd_.*.xlsx"
+        )
+    image_analysis = ImageAnalysis(
+        recorder=file_recorder,
+        result_param=result_param
+        )
     enriched_df = image_analysis.run()
     
