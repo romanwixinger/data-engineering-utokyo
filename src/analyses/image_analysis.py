@@ -15,7 +15,7 @@ sys.path.insert(0,'..')
 import pandas as pd
 
 from recorders.file_recorder import FileRecorder, FileParser
-from fit_mot_number import perform_analysis
+from analyses.fit_mot_number import MOTMLE
 from analyses.analysis import Analysis, ResultParameter
     
     
@@ -23,6 +23,7 @@ class ImageAnalysis(Analysis):
     
     def __init__(self,
                  recorder: FileRecorder or FileParser,
+                 perform_analysis: callable, 
                  result_param: ResultParameter,
                  time_interval: tuple=None,
                  min_signal: int=0):
@@ -31,6 +32,7 @@ class ImageAnalysis(Analysis):
             recorder=recorder, 
             result_param=result_param
             ) 
+        self.perform_analysis = perform_analysis
         self.time_interval = time_interval
         self.min_signal = min_signal
         
@@ -55,7 +57,7 @@ class ImageAnalysis(Analysis):
             source = row["filepath"]
             filename = row["filename"]
             target = self.image_src + filename + self.image_extension
-            statistics = perform_analysis(source=source, target=target, mode="mot number", min_signal=self.min_signal)
+            statistics = self.perform_analysis(source=source, target=target, mode="mot number", min_signal=self.min_signal)
             statistics_list.append(statistics)
             
         # Enrich dataframe with results
@@ -81,6 +83,9 @@ class ImageAnalysis(Analysis):
     
 if __name__=="__main__": 
     
+    import constants.mot_constants as c_ccd
+    perform_analysis = MOTMLE(c=c_ccd).perform_analysis
+
     result_param = ResultParameter(
         image_src="../../plots/20220829/images/",
         image_extension=".png",
@@ -92,6 +97,7 @@ if __name__=="__main__":
         )
     image_analysis = ImageAnalysis(
         recorder=file_recorder,
+        perform_analysis=perform_analysis, 
         result_param=result_param
         )
     enriched_df = image_analysis.run()

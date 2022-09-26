@@ -33,7 +33,7 @@ import constants.mot_constants_cmos as c_cmos
 
 
 # Settings
-c = c_ccd
+c = c_cmos
 
 
 class MOTMLE():
@@ -58,26 +58,26 @@ class MOTMLE():
             If the total sum of the df is less than min_signal, then we 
             terminate the analysis. 
         """
-        print("Start")
-        # Add args to reference list if we do not have enough references yet
-        if len(self.reference_args) < self.number_of_references: 
-            self.reference_args.append((source, target, mode, min_signal)) 
-            print(f"""MLE of the MOT was postponed. 
-                     We will first get {self.number_of_references} reference images 
-                     and then do the analyses at once.""")
         
-        # Stop estimation if we do not have enough references yet
-        if len(self.reference_args) < self.number_of_references: 
-            return 
+        # # Add args to reference list if we do not have enough references yet
+        # if len(self.reference_args) < self.number_of_references: 
+        #     self.reference_args.append((source, target, mode, min_signal)) 
+        #     print(f"""MLE of the MOT was postponed. 
+        #              We will first get {self.number_of_references} reference images 
+        #              and then do the analyses at once.""")
+        
+        # # Stop estimation if we do not have enough references yet
+        # if len(self.reference_args) < self.number_of_references: 
+        #     return 
             
-        # Once we have enough references, we estimate the background and do
-        # the analyses which we have skipped before
-        if len(self.reference_args) == self.number_of_references:
-            print("We now have enough references for the analysis.")
-            self._find_dead_pixels()
-            for arg in self.reference_args: 
-                self.perform_analysis(*arg)
-            return
+        # # Once we have enough references, we estimate the background and do
+        # # the analyses which we have skipped before
+        # if len(self.reference_args) == self.number_of_references:
+        #     print("We now have enough references for the analysis.")
+        #     self._find_dead_pixels()
+        #     for arg in self.reference_args: 
+        #         self.perform_analysis(*arg)
+        #     return
         
         # Load data
         df = self._load(source=source)
