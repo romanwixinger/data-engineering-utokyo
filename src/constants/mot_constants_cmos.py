@@ -85,10 +85,10 @@ MOTnum_pulses_per_s_coef = Pow_pulses_per_s_coef / MOTnum_Pow_coef
 
 
 # Input data (observed csv data from new CCD camera) 
-Xmin = 0            # Region of interest -> 175
-Xmax = 504          # Region of interest -> 232
-Ymin = 0            # Region of interest -> 233 
-Ymax = 504          # Region of interest -> 290
+Xmin = 850            # Region of interest -> 175
+Xmax = 950          # Region of interest -> 232
+Ymin = 300            # Region of interest -> 233 
+Ymax = 400          # Region of interest -> 290
 Xnum = Xmax - Xmin
 Ynum = Ymax - Ymin
 
