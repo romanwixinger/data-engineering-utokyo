@@ -38,27 +38,126 @@ c = c_ccd
 
 class MOTMLE():
     
-    def __init__(self, c, reference_dfs: list[pd.DataFrame]): 
+    def __init__(self, c): 
+        # Settings
         self.c = c
-        self.dead_pixels = None
+        self.number_of_references = 2
+        
+        # Build a reference of the background coming from dead pixels
+        self.reference_args = []
+        self.has_reference = False
+        self.dead_pixel_bg = np.zeros((c.Xnum * c.Ynum))
+        self.dead_pixel_signal = 0
+        
+    def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0): 
+        """ Loads the image data, fits a 2D gaussian model on it, generates a plot
+            of the original data and a fit, saves the plot, and returns the 
+            statistics of the fit. 
+            Source is the filepath of the original data and target is the filepath 
+            of the plot. The mode can be either 'power' or 'mot number'. 
+            If the total sum of the df is less than min_signal, then we 
+            terminate the analysis. 
+        """
+        print("Start")
+        # Add args to reference list if we do not have enough references yet
+        if len(self.reference_args) < self.number_of_references: 
+            self.reference_args.append((source, target, mode, min_signal)) 
+            print(f"""MLE of the MOT was postponed. 
+                     We will first get {self.number_of_references} reference images 
+                     and then do the analyses at once.""")
+        
+        # Stop estimation if we do not have enough references yet
+        if len(self.reference_args) < self.number_of_references: 
+            return 
+            
+        # Once we have enough references, we estimate the background and do
+        # the analyses which we have skipped before
+        if len(self.reference_args) == self.number_of_references:
+            print("We now have enough references for the analysis.")
+            self._find_dead_pixels()
+            for arg in self.reference_args: 
+                self.perform_analysis(*arg)
+            return
+        
+        # Load data
+        df = self._load(source=source)
+        
+        # Check if the image is promising
+        total_sum = df.sum().sum() 
+        if total_sum < min_signal + self.dead_pixel_signal: 
+            print(f"The image was discarded because the total signal is {total_sum} < {min_signal} + {self.dead_pixel_signal}.")
+            return {
+                "fit_successful": False, 
+                "total_sum": total_sum, 
+                "enough_pulses": False,
+                }
+        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal} + {self.dead_pixel_signal}.")
+            
+        # Fit MLE
+        data = self._preprocess(df, mode=mode)
+        statistics = self._fitting(model=self.c.two_D_gauss, data=data, mode=mode)
+        statistics["total_sum"] = total_sum
+        statistics["enough_pulses"] = True
+        
+        # Plot 3D
+        time = self._time(source)
+        fit_data = self._generate_fit_data(self.c.two_D_gauss, data, statistics)\
+            if statistics["fit_successful"] else None
+        self._plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
+        
+        # Plot heatmap
+        heatmap_target = target[:-4] + "_heatmap" + target[-4:] 
+        self._plot_heatmap(data, fit_data, target=heatmap_target, mode=mode, time=time)
 
-    def load(self, source: str) -> pd.DataFrame: 
+        # Print and return statistics
+        self._print_stats(statistics)
+        return statistics
+
+    def _load(self, source: str) -> pd.DataFrame: 
         """ Load the pandas dataframe and the right constants. """
         if ".xlsx" in source: 
             df = pd.read_excel(source, index_col=None, header=None)
         else: 
             df = pd.read_csv(source, index_col=None, header=None)
         return df
-
-    def find_dead_pixels(self): 
-        """ TODO: Implement method which takes the reference dfs and finds the 
-            pixels which always have the same value. Create a vectorized 
-            method which subtract this noise. 
-        """
-        pass
-        
     
-    def preprocess(self, df: pd.DataFrame, mode: str): 
+    def _df_to_array(self, df: pd.DataFrame) -> np.array: 
+        """ Takes the image as df and returns it as np.array. 
+        """
+        return df\
+            .iloc[self.c.Ymin:self.c.Ymax, self.c.Xmin:self.c.Xmax]\
+            .to_numpy()\
+            .reshape(-1)
+        
+    def _find_dead_pixels(self) -> np.array: 
+        """ Takes the reference arguments, load the dataframes and finds the 
+            pixels which always have the same value. Creates a background array
+            which we can subtract when performing the analysis. 
+        """
+        # Load 
+        sources = [args[0] for args in self.reference_args]
+        dfs = [self._load(source) for source in sources]
+        
+        # Input validation
+        assert(len(dfs) >= 2)
+        ref_arr = self._df_to_array(dfs[0])
+        assert(all(ref_arr.shape == self._df_to_array(df).shape\
+                   for df in dfs[1:]))
+        
+        # Convert to np array
+        arrays = [self._df_to_array(df) for df in dfs]
+        
+        # Find the pixels which are same for all arrays (std == 0) 
+        stacked_array = np.concatenate(arrays, axis=1)
+        std_array = np.std(stacked_array, axis=1)
+        print("std_array")
+        
+        # Construct the background coming from dead pixels
+        self.dead_pixel_bg = np.where(std_array == 0.0, ref_arr, 0.0 * ref_arr)
+        self.dead_pixel_signal = np.sum(self.dead_pixel_bg)
+        return 
+        
+    def _preprocess(self, df: pd.DataFrame, mode: str): 
         """ Takes the ssd image data as pandas dataframe and converts into 
             numpy arrays. Converts the unit of the z-axis. 
         """
@@ -68,15 +167,15 @@ class MOTMLE():
         y_data= np.repeat(np.arange(self.c.Ymin, self.c.Ymax), self.c.Xnum) * self.c.Cell_ysize * self.c.b
     
         # Scale z
-        scaling_factor = self.get_scaling_factor(mode)
-        array = df.iloc[self.c.Ymin:self.c.Ymax, self.c.Xmin:self.c.Xmax]
-        z_data = array.to_numpy().reshape(-1) * scaling_factor
+        scaling_factor = self._get_scaling_factor(mode)
+        array = self._df_to_array(df)
+        z_data = array * scaling_factor
         
         # Combine
         data = {"x": x_data, "y": y_data, "z": z_data}
         return data
     
-    def get_scaling_factor(self, mode: str) -> float: 
+    def _get_scaling_factor(self, mode: str) -> float: 
         """ The unit of the z axis can be converted using a scaling factor. This 
             function returns the scaling factor, which can be determined from the
             mode, which is either 'power' or 'mot number'. 
@@ -87,14 +186,14 @@ class MOTMLE():
             }[mode]
         return scaling_factor
     
-    def fitting(self, model: callable, data: dict, mode: str):
+    def _fitting(self, model: callable, data: dict, mode: str):
         """ Fit the model to the data."""
     
         # Extraction
         x, y, z = data["x"], data["y"], data["z"]
     
         # Initial guess for fit parameters
-        p0 = self.get_initial_guess(data, mode)
+        p0 = self._get_initial_guess(data, mode)
         
         # Fitting: popt is the best estimate, pcov is the covariance output
         try: 
@@ -117,9 +216,9 @@ class MOTMLE():
         r_squared = 1 - (rss / tss)     # Coefficient of determination R^2
         
         # Return statistics
-        return self.extract_statistics(r_squared, chi2, popt, pcov, perr)
+        return self._extract_statistics(r_squared, chi2, popt, pcov, perr)
     
-    def extract_statistics(self, r_squared, chi2, popt, pcov, perr): 
+    def _extract_statistics(self, r_squared, chi2, popt, pcov, perr): 
         return {
             "A": popt[0],
             "A_unc": perr[0],
@@ -143,7 +242,7 @@ class MOTMLE():
             "fit_successful": True
             }
         
-    def get_initial_guess(self, data: dict, mode: str): 
+    def _get_initial_guess(self, data: dict, mode: str): 
         """ Proposes initial guesses for the fitting parameters with heuristics. 
         """
         x, y, z = data["x"], data["y"], data["z"] 
@@ -170,7 +269,7 @@ class MOTMLE():
         p0 = np.array([A, sigma_x, sigma_y, mu_x, mu_y, C])
         return p0
         
-    def generate_fit_data(self, model: callable, data: dict, statistics: dict): 
+    def _generate_fit_data(self, model: callable, data: dict, statistics: dict): 
         """ Takes the x, y values of the data and the fit parameter, and returns
             fitted z values on a x, y grid in the same format as the data. 
         """
@@ -190,7 +289,7 @@ class MOTMLE():
         fit_data = {"x": X, "y": Y, "z": fit_z}
         return fit_data
     
-    def plot_fit_result(self, data: dict, fit_data: dict, target: str, mode: str, time: str):
+    def _plot_fit_result(self, data: dict, fit_data: dict, target: str, mode: str, time: str):
         """ Plots the 3d data and the fit. Saves the image to the url. 
         """
         # Setup figure
@@ -224,7 +323,7 @@ class MOTMLE():
         plt.savefig(target, dpi=300)
         plt.show(block=False)
         
-    def plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str):
+    def _plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str):
         """ Plots the 3d data and the fit. Saves the image to the url. 
         """
         
@@ -252,14 +351,14 @@ class MOTMLE():
         plt.savefig(target, dpi=300)
         plt.show()   
         
-    def time(self, source: str): 
+    def _time(self, source: str): 
         """ Return the time when the file was created. 
         """
         
         timestamp = os.path.getctime(source)
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     
-    def print_stats(self, statistics: dict):
+    def _print_stats(self, statistics: dict):
         if not statistics["fit_successful"]: 
             print(" Result ***********")
             print("Fit was not succesful.")
@@ -279,53 +378,10 @@ class MOTMLE():
         print("R^2 = ", statistics["R^2"])
         print("*******************")
         
-    def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0): 
-        """ Loads the image data, fits a 2D gaussian model on it, generates a plot
-            of the original data and a fit, saves the plot, and returns the 
-            statistics of the fit. 
-            Source is the filepath of the original data and target is the filepath 
-            of the plot. The mode can be either 'power' or 'mot number'. 
-            If the total sum of the df is less than min_signal, then we 
-            terminate the analysis. 
-        """
-        # Load data
-        df = self.load(source=source)
-        
-        # Check if the image is promising
-        total_sum = df.sum().sum() 
-        if total_sum < min_signal: 
-            print(f"The image was discarded because the total signal is {total_sum} < {min_signal}.")
-            return {
-                "fit_successful": False, 
-                "total_sum": total_sum, 
-                "enough_pulses": False,
-                }
-        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal}.")
-            
-        # Fit MLE
-        data = self.preprocess(df, mode=mode)
-        statistics = self.fitting(model=self.c.two_D_gauss, data=data, mode=mode)
-        statistics["total_sum"] = total_sum
-        statistics["enough_pulses"] = True
-        
-        # Plot 3D
-        time = self.time(source)
-        fit_data = self.generate_fit_data(self.c.two_D_gauss, data, statistics)\
-            if statistics["fit_successful"] else None
-        self.plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
-        
-        # Plot heatmap
-        heatmap_target = target[:-4] + "_heatmap" + target[-4:] 
-        self.plot_heatmap(data, fit_data, target=heatmap_target, mode=mode, time=time)
-
-        # Print and return statistics
-        self.print_stats(statistics)
-        return statistics
-    
     
 """ Default instance """
 
-mot_mle = MOTMLE(c=c, reference_dfs=[])
+mot_mle = MOTMLE(c=c)
 perform_analysis = mot_mle.perform_analysis
     
 
