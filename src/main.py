@@ -30,6 +30,11 @@ if __name__ == '__main__':
     image_folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
     match = ".*ccd_detuning.*.xlsx"
     c = c_ccd
+    min_signal = 0
+    time_interval = (
+        datetime(2000, 1, 1, 12, 0, 0), 
+        datetime(2030, 1, 1, 12, 0, 0)
+        )
     
     # Output 
     plot_path = "../../plots/20220829/"
@@ -67,9 +72,8 @@ if __name__ == '__main__':
         recorder=image_recorder,
         perform_analysis=perform_analysis, 
         result_param=result_param_image,
-        min_signal=6e6,
-        time_interval=(datetime(2000, 1, 1, 12, 0, 0), 
-                       datetime(2030, 1, 1, 12, 0, 0))
+        min_signal=min_signal,
+        time_interval=time_interval
         )
         
     # Setup runner
