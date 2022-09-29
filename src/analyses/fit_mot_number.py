@@ -28,12 +28,7 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-import constants.mot_constants as c_ccd
-import constants.mot_constants_cmos as c_cmos
-
-
-# Settings
-c = c_cmos
+from constants.mot_constants import c_ccd
 
 
 class MOTMLE():
@@ -381,7 +376,7 @@ class MOTMLE():
     
 """ Default instance """
 
-mot_mle = MOTMLE(c=c)
+mot_mle = MOTMLE(c=c_ccd)
 perform_analysis = mot_mle.perform_analysis
     
 

@@ -134,3 +134,4 @@ results/20220829/ssd_analysis_results.csv
 results/20220829/image_analysis_results.csv
 results/20220314/ssd_analysis_results.csv
 *.csv
+*.txt
