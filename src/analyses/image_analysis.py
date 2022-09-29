@@ -83,7 +83,7 @@ class ImageAnalysis(Analysis):
     
 if __name__=="__main__": 
     
-    import constants.mot_constants as c_ccd
+    from constants.mot_constants import c_ccd
     perform_analysis = MOTMLE(c=c_ccd).perform_analysis
 
     result_param = ResultParameter(
