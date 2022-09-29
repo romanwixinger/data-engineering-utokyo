@@ -12,10 +12,15 @@ sys.path.insert(0,'..')
 
 from datetime import datetime
 
+from constants.mot_constants import c_ccd
+from recorders.ssd_recorder import SSDRecorder
+from recorders.file_recorder import FileRecorder
+from analyses.analysis import ResultParameter
 from analyses.ssd_analysis import SSDAnalysis
 from analyses.image_analysis import ImageAnalysis
 from analyses.mkdir import create_folders
 from analyses.runner import Runner
+from analyses.fit_mot_number import MOTMLE
 
 
 if __name__ == '__main__': 
@@ -24,6 +29,7 @@ if __name__ == '__main__':
     ssd_file = "../../data/20220829/-20220829-144945-Slot1-In1.csv"
     image_folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
     match = ".*ccd_detuning.*.xlsx"
+    c = c_ccd
     
     # Output 
     plot_path = "../../plots/20220829/"
@@ -31,21 +37,41 @@ if __name__ == '__main__':
     
     # Make dirs
     create_folders(plot_path, result_path)
-        
-    runner = Runner(analyses=[
-        SSDAnalysis(
-            filepath=ssd_file ,
-            image_src=plot_path + "ssd/",
-            image_extension=".png",
-            result_filepath=result_path+"ssd_analysis_results.csv"
-            ),
-        ImageAnalysis(filepath=image_folder, 
-                    match=match, 
-                    image_src=plot_path+"image/",
-                    result_filepath=result_path+"image_analysis_results.csv",
-                    min_signal=6e6,
-                    time_interval=(datetime(2000, 1, 1, 12, 0, 0), 
-                                   datetime(2030, 1, 1, 12, 0, 0)))
-        ][1:])
     
+    # Setup result parameters
+    result_param_ssd = ResultParameter(
+        image_src=plot_path+"ssd/",
+        image_extension=".png",
+        result_filepath=result_path+"ssd_analysis_results.csv"
+        )
+    result_param_image = ResultParameter(
+        image_src=plot_path+"image/",
+        image_extension=".png",
+        result_filepath=result_path+"image_analysis_results.csv"
+        )
+    
+    # Setup recorders
+    ssd_recorder = SSDRecorder(filepath=ssd_file)
+    image_recorder = FileRecorder(
+        filepath=image_folder,
+        match=match 
+        )
+    
+    # Setup analyses
+    perform_analysis = MOTMLE(c=c).perform_analysis
+    ssd_analysis = SSDAnalysis(
+        recorder=ssd_recorder,
+        result_param=result_param_ssd
+        )
+    image_analysis = ImageAnalysis(
+        recorder=image_recorder,
+        perform_analysis=perform_analysis, 
+        result_param=result_param_image,
+        min_signal=6e6,
+        time_interval=(datetime(2000, 1, 1, 12, 0, 0), 
+                       datetime(2030, 1, 1, 12, 0, 0))
+        )
+        
+    # Setup runner
+    runner = Runner(analyses=[ssd_analysis, image_analysis])
     runner.run(cycles=3*12*60, period_s=5)
