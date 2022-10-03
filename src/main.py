@@ -26,7 +26,7 @@ from analyses.fit_mot_number import MOTMLE
 if __name__ == '__main__': 
     
     # Input 
-    ssd_file = "../../data/20220829/-20220829-144945-Slot1-In1.csv"
+    ssd_file = "../data/20220829/-20220829-144945-Slot1-In1.csv"
     image_folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
     match = ".*ccd_detuning.*.xlsx"
     c = c_ccd
@@ -35,10 +35,12 @@ if __name__ == '__main__':
         datetime(2000, 1, 1, 12, 0, 0), 
         datetime(2030, 1, 1, 12, 0, 0)
         )
+    use_n_reference_images = 4
+    dead_pixel_ratio = 1.0 / 5.0
     
     # Output 
-    plot_path = "../../plots/20220829/"
-    result_path = "../../results/20220829/"
+    plot_path = "../plots/20220829/"
+    result_path = "../results/20220829/"
     
     # Make dirs
     create_folders(plot_path, result_path)
@@ -63,7 +65,11 @@ if __name__ == '__main__':
         )
     
     # Setup analyses
-    perform_analysis = MOTMLE(c=c).perform_analysis
+    reference_image_filepaths = image_recorder.get_table().head(use_n_reference_images)["filepath"]
+    perform_analysis = MOTMLE(c=c, 
+                              references=reference_image_filepaths,
+                              do_subtract_dead_pixels=True,
+                              dead_pixel_ratio=dead_pixel_ratio).perform_analysis
     ssd_analysis = SSDAnalysis(
         recorder=ssd_recorder,
         result_param=result_param_ssd
@@ -77,5 +83,5 @@ if __name__ == '__main__':
         )
         
     # Setup runner
-    runner = Runner(analyses=[ssd_analysis, image_analysis])
+    runner = Runner(analyses=[image_analysis])
     runner.run(cycles=3*12*60, period_s=5)

@@ -87,7 +87,7 @@ if __name__=="__main__":
     perform_analysis = MOTMLE(c=c_ccd).perform_analysis
 
     result_param = ResultParameter(
-        image_src="../../plots/20220829/images/",
+        image_src="../../plots/20220829/image/",
         image_extension=".png",
         result_filepath="../../results/20220829/"+"image_analysis_results.csv"
         )
