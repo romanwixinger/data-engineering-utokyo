@@ -33,7 +33,7 @@ from constants.mot_constants import c_ccd
 
 class MOTMLE():
     
-    def __init__(self, c, references: list[str], do_subtract_dead_pixels: bool=True, dead_pixel_ratio: float=1.0/20.0): 
+    def __init__(self, c, references: list[str], do_subtract_dead_pixels: bool=True, dead_pixel_percentile: float=100.0/20): 
         # Settings
         self.c = c
         self.references = references
@@ -43,7 +43,7 @@ class MOTMLE():
         # Build a reference of the background coming from dead pixels
         self.dead_pixels = np.zeros((c.Xnum * c.Ynum))
         self.dead_pixel_sum = 0
-        self.dead_pixel_ratio = dead_pixel_ratio
+        self.dead_pixel_percentile = dead_pixel_percentile
         if self.do_subtract_dead_pixels: 
             self._precalculate_dead_pixels()
             assert len(self.references) >= self.min_nr_of_references, f"MOTMLE needs at least {self.min_nr_of_references} reference images."
@@ -78,7 +78,6 @@ class MOTMLE():
         print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal} + {self.dead_pixel_sum} after subtraction of the background of {self.dead_pixel_sum}.")
             
         # Fit MLE
-        data = self._preprocess(df, mode=mode)
         statistics = self._fitting(model=self.c.two_D_gauss, data=data, mode=mode)
         statistics["total_sum"] = total_sum
         statistics["enough_pulses"] = True
@@ -115,10 +114,17 @@ class MOTMLE():
         
     def _precalculate_dead_pixels(self) -> np.array: 
         """ Takes a list of reference images, and finds the dead pixels by
-            calculating the standard deviation of the same pixel across the 
-            reference images. The dead pixels are the ones with the lowest std. 
-            Sets the member variables that are later used inthe method
+            calculating the ratio standard deviation / max(average, 1) of the 
+            same pixel across the reference images. The dead pixels are the ones 
+            with the lowest std. 
+            Sets the member variables that are later used in the method
             _subtract_dead_pixels(). 
+            
+            Assumptions: 
+            - Dead pixels have high median
+            
+            So dead pixels are the ones with the smallest ratio
+            1 / max(median, 1)
         """
         # Load 
         dfs = [self._load(source) for source in self.references]
@@ -134,29 +140,58 @@ class MOTMLE():
         
         # Find the pixels which are same for all arrays (std small) 
         stacked_array = np.concatenate(arrays, axis=1)
-        std_array = np.std(stacked_array, axis=1)
-        print(f"There were {np.count_nonzero(std_array)} pixels with non-zero std and {np.count_nonzero(std_array == 0)} pixels with zero std.") 
-        percentile = np.percentile(std_array, self.dead_pixel_ratio, axis=0)
-        print("std_array", std_array)
-        print("percentile", percentile)
+        signal_std = np.std(stacked_array, axis=1)
+        signal_mean = np.median(stacked_array, axis=1)
+        signal_mean_without_zeros = np.where(signal_mean < 1, np.ones_like(signal_mean), signal_mean)
+        ratio = np.divide(np.ones_like(signal_std), signal_mean_without_zeros) 
+        
+        print(f"There were {np.count_nonzero(signal_std)} pixels with non-zero std and {np.count_nonzero(signal_std == 0)} pixels with zero std.") 
+        percentile = np.percentile(ratio, self.dead_pixel_percentile, axis=0)
         
         # Construct the background coming from dead pixels
-        self.dead_pixels = np.where(std_array <= percentile, ref_arr, 0.0 * ref_arr)
+        self.dead_pixels = np.where(ratio <= percentile, ref_arr, 0.0 * ref_arr)
         self.dead_pixel_sum = np.sum(self.dead_pixels)
-        print("dead_pixels", self.dead_pixels)
-        print("dead_pixel_sum", self.dead_pixel_sum)
+        
+        # Create heatmaps
+        self._plot_dead_pixels(signal_mean, ratio, signal_std, self.dead_pixels)
         return 
+    
+    def _plot_dead_pixels(self, signal_mean, ratio, signal_std, dead_pixels): 
+        """ Create heatmaps of the signal mean, ratio, std and estimated
+            dead pixels. 
+        """
+        arrays = [signal_mean.reshape((self.c.Ynum, self.c.Xnum)),
+                  ratio.reshape((self.c.Ynum, self.c.Xnum)),
+                  signal_std.reshape((self.c.Ynum, self.c.Xnum)),
+                  dead_pixels.reshape((self.c.Ynum, self.c.Xnum))]
+        titles = ["Mean", "Ratio", "Std", "Dead pixels"]
+
+        fig, axs = plt.subplots(nrows=2, 
+                                ncols=2, 
+                                figsize=(12, 12),
+                                subplot_kw={'xticks': [], 'yticks': []})
+        
+        for ax, arr, title in zip(axs.flatten(), arrays, titles): 
+            print(ax)
+            print(arr)
+            ax.imshow(arr, cmap='hot', interpolation='nearest')
+            ax.set_title(title)
+            
+        plt.tight_layout()
+        plt.show()   
+            
+        return
     
     def _subtract_dead_pixels(self, data: dict): 
         """ Subtracts the values of the dead pixels from the z-values of the 
             data. Replaces the value with 0 if they become negative. 
         """
     
-        print("Array before subtraction: ", data["z"])
+        print("Array before subtraction: ", data["z"], "with sum", np.sum(data["z"]))
         array_z = data["z"] 
         array_z_without_dead_pixels = np.maximum(np.zeros_like(array_z), array_z - self.dead_pixels)
         data["z"] = array_z_without_dead_pixels
-        print("Array after subtraction: ", data["z"])
+        print("Array after subtraction: ", data["z"], "with sum", np.sum(data["z"]))
         return
         
     def _preprocess(self, df: pd.DataFrame, mode: str): 

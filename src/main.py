@@ -12,7 +12,7 @@ sys.path.insert(0,'..')
 
 from datetime import datetime
 
-from constants.mot_constants import c_ccd
+from constants.mot_constants import c_ccd, c_cmos_Fr_20220918
 from recorders.ssd_recorder import SSDRecorder
 from recorders.file_recorder import FileRecorder
 from analyses.analysis import ResultParameter
@@ -27,20 +27,20 @@ if __name__ == '__main__':
     
     # Input 
     ssd_file = "../data/20220829/-20220829-144945-Slot1-In1.csv"
-    image_folder = "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
-    match = ".*ccd_detuning.*.xlsx"
-    c = c_ccd
-    min_signal = 0
+    image_folder = "../data/beamtime/mot_data/" # "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
+    match = ".*cmos.*.csv" # ".*ccd_detuning.*.xlsx"
+    c = c_cmos_Fr_20220918
+    min_signal = 95000
     time_interval = (
         datetime(2000, 1, 1, 12, 0, 0), 
         datetime(2030, 1, 1, 12, 0, 0)
         )
-    use_n_reference_images = 4
-    dead_pixel_ratio = 1.0 / 5.0
+    use_n_reference_images = 10
+    dead_pixel_percentile = 5.0 # [%], must between 0 and 100
     
     # Output 
-    plot_path = "../plots/20220829/"
-    result_path = "../results/20220829/"
+    plot_path = "../plots/beamtime/" # "../plots/20220829/"
+    result_path = "../results/beamtime/" # "../results/20220829/"
     
     # Make dirs
     create_folders(plot_path, result_path)
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     perform_analysis = MOTMLE(c=c, 
                               references=reference_image_filepaths,
                               do_subtract_dead_pixels=True,
-                              dead_pixel_ratio=dead_pixel_ratio).perform_analysis
+                              dead_pixel_percentile=dead_pixel_percentile).perform_analysis
     ssd_analysis = SSDAnalysis(
         recorder=ssd_recorder,
         result_param=result_param_ssd
