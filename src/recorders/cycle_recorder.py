@@ -15,10 +15,10 @@ dependencies of the MOT number.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
-from recorders.recorder import Recorder
-from recorders.result_recorder import Recorder, SSDResultsRecorder, ImageResultsRecorder, ParameterRecorder
+from src.recorders.recorder import Recorder
+from src.recorders.result_recorder import Recorder, SSDResultsRecorder, ImageResultsRecorder, ParameterRecorder
 
 
 class CycleRecorder(Recorder): 

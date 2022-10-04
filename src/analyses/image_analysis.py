@@ -10,13 +10,13 @@ number and the power. The reports are then a collection of results as a table.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import pandas as pd
 
-from recorders.file_recorder import FileRecorder, FileParser
-from analyses.fit_mot_number import MOTMLE
-from analyses.analysis import Analysis, ResultParameter
+from src.recorders.file_recorder import FileRecorder, FileParser
+from src.analyses.fit_mot_number import MOTMLE
+from src.analyses.analysis import Analysis, ResultParameter
     
     
 class ImageAnalysis(Analysis): 
@@ -84,7 +84,9 @@ class ImageAnalysis(Analysis):
 if __name__=="__main__": 
     
     from constants.mot_constants import c_ccd
-    perform_analysis = MOTMLE(c=c_ccd).perform_analysis
+    perform_analysis = MOTMLE(c=c_ccd, 
+                              references=[], 
+                              do_subtract_dead_pixels=False).perform_analysis
 
     result_param = ResultParameter(
         image_src="../../plots/20220829/image/",

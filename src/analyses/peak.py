@@ -10,7 +10,7 @@ plots the region around the peaks as histogram.
 
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ import matplotlib.dates as md
 import datetime as dt
 import math
 
-from constants.constants import plotting_params
+from src.constants.constants import plotting_params
 plt.rcParams.update(plotting_params)
 
 

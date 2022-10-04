@@ -17,7 +17,7 @@ Sources:
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import os
 from datetime import datetime
@@ -28,7 +28,7 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from constants.mot_constants import c_ccd
+from src.constants.mot_constants import c_ccd
 
 
 class MOTMLE():

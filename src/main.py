@@ -8,19 +8,19 @@ Script to execute the analyses.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'..')  # Set src as top-level
 
 from datetime import datetime
 
-from constants.mot_constants import c_ccd, c_cmos_Fr_20220918
-from recorders.ssd_recorder import SSDRecorder
-from recorders.file_recorder import FileRecorder
-from analyses.analysis import ResultParameter
-from analyses.ssd_analysis import SSDAnalysis
-from analyses.image_analysis import ImageAnalysis
-from analyses.mkdir import create_folders
-from analyses.runner import Runner
-from analyses.fit_mot_number import MOTMLE
+from src.constants.mot_constants import c_ccd, c_cmos_Fr_20220918
+from src.recorders.ssd_recorder import SSDRecorder
+from src.recorders.file_recorder import FileRecorder
+from src.analyses.analysis import ResultParameter
+from src.analyses.ssd_analysis import SSDAnalysis
+from src.analyses.image_analysis import ImageAnalysis
+from src.analyses.mkdir import create_folders
+from src.analyses.runner import Runner
+from src.analyses.fit_mot_number import MOTMLE
 
 
 if __name__ == '__main__': 

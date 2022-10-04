@@ -8,13 +8,13 @@ Finds peaks in the SSD pulse data.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from analyses.peak import Peak
+from src.analyses.peak import Peak
         
     
 class PeakFinder(object): 
