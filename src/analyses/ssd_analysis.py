@@ -134,7 +134,7 @@ class SSDAnalysis(Analysis):
         
         return fig
     
-    def _ts_ns_to_timestamp(self, ts_list: list[int]): 
+    def _ts_ns_to_timestamp(self, ts_list: list): 
         return [dt.datetime.fromtimestamp(ts // 1000000000) for ts in ts_list]
     
     def _get_new_result_df(self, peaks: list): 

@@ -33,7 +33,7 @@ from src.constants.mot_constants import c_ccd
 
 class MOTMLE():
     
-    def __init__(self, c, references: list[str], do_subtract_dead_pixels: bool=True, dead_pixel_percentile: float=100.0/20): 
+    def __init__(self, c, references: list, do_subtract_dead_pixels: bool=True, dead_pixel_percentile: float=100.0/20): 
         # Settings
         self.c = c
         self.references = references

@@ -67,7 +67,7 @@ class ImageAnalysis(Analysis):
         self._save_results(enriched_df)
         return enriched_df
     
-    def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list[dict]) -> pd.DataFrame: 
+    def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list) -> pd.DataFrame: 
         """ Takes the table from the ImageRecorder and the statistics generated 
             by the fit_mot_data function. Combines the two in an enriched 
             dataframe. 

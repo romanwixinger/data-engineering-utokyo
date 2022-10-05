@@ -115,7 +115,7 @@ class Peak(object):
 
         return 
     
-    def _ts_ns_to_timestamp(self, ts_list: list[int]): 
+    def _ts_ns_to_timestamp(self, ts_list: list): 
         if type(ts_list) == int: 
             ts = ts_list
             return dt.datetime.fromtimestamp(ts / 1000000000)
