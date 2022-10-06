@@ -8,7 +8,7 @@ Base class for analyses.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import os
 from abc import abstractmethod
@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from recorders.recorder import Recorder
+from src.recorders.recorder import Recorder
 
 
 class ResultParameter(object): 

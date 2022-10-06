@@ -17,7 +17,7 @@ Sources:
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import os
 from datetime import datetime
@@ -28,26 +28,25 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-import constants.mot_constants as c_ccd
-import constants.mot_constants_cmos as c_cmos
-
-
-# Settings
-c = c_ccd
+from src.constants.mot_constants import c_ccd
 
 
 class MOTMLE():
     
-    def __init__(self, c): 
+    def __init__(self, c, references: list, do_subtract_dead_pixels: bool=True, dead_pixel_percentile: float=100.0/20): 
         # Settings
         self.c = c
-        self.number_of_references = 2
+        self.references = references
+        self.min_nr_of_references = 2
+        self.do_subtract_dead_pixels = do_subtract_dead_pixels
         
         # Build a reference of the background coming from dead pixels
-        self.reference_args = []
-        self.has_reference = False
-        self.dead_pixel_bg = np.zeros((c.Xnum * c.Ynum))
-        self.dead_pixel_signal = 0
+        self.dead_pixels = np.zeros((c.Xnum * c.Ynum))
+        self.dead_pixel_sum = 0
+        self.dead_pixel_percentile = dead_pixel_percentile
+        if self.do_subtract_dead_pixels: 
+            self._precalculate_dead_pixels()
+            assert len(self.references) >= self.min_nr_of_references, f"MOTMLE needs at least {self.min_nr_of_references} reference images."
         
     def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0): 
         """ Loads the image data, fits a 2D gaussian model on it, generates a plot
@@ -58,43 +57,27 @@ class MOTMLE():
             If the total sum of the df is less than min_signal, then we 
             terminate the analysis. 
         """
-        print("Start")
-        # Add args to reference list if we do not have enough references yet
-        if len(self.reference_args) < self.number_of_references: 
-            self.reference_args.append((source, target, mode, min_signal)) 
-            print(f"""MLE of the MOT was postponed. 
-                     We will first get {self.number_of_references} reference images 
-                     and then do the analyses at once.""")
-        
-        # Stop estimation if we do not have enough references yet
-        if len(self.reference_args) < self.number_of_references: 
-            return 
-            
-        # Once we have enough references, we estimate the background and do
-        # the analyses which we have skipped before
-        if len(self.reference_args) == self.number_of_references:
-            print("We now have enough references for the analysis.")
-            self._find_dead_pixels()
-            for arg in self.reference_args: 
-                self.perform_analysis(*arg)
-            return
         
         # Load data
         df = self._load(source=source)
+        data = self._preprocess(df, mode=mode)
+        
+        # Subtract dead pixels
+        if self.do_subtract_dead_pixels: 
+            self._subtract_dead_pixels(data)
         
         # Check if the image is promising
-        total_sum = df.sum().sum() 
-        if total_sum < min_signal + self.dead_pixel_signal: 
-            print(f"The image was discarded because the total signal is {total_sum} < {min_signal} + {self.dead_pixel_signal}.")
+        total_sum = np.sum(data["z"]) 
+        if total_sum < min_signal: 
+            print(f"The image was discarded because the total signal is {total_sum} < {min_signal} after subtraction of the background of {self.dead_pixel_sum}")
             return {
                 "fit_successful": False, 
                 "total_sum": total_sum, 
                 "enough_pulses": False,
                 }
-        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal} + {self.dead_pixel_signal}.")
+        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal} + {self.dead_pixel_sum} after subtraction of the background of {self.dead_pixel_sum}.")
             
         # Fit MLE
-        data = self._preprocess(df, mode=mode)
         statistics = self._fitting(model=self.c.two_D_gauss, data=data, mode=mode)
         statistics["total_sum"] = total_sum
         statistics["enough_pulses"] = True
@@ -129,33 +112,87 @@ class MOTMLE():
             .to_numpy()\
             .reshape(-1)
         
-    def _find_dead_pixels(self) -> np.array: 
-        """ Takes the reference arguments, load the dataframes and finds the 
-            pixels which always have the same value. Creates a background array
-            which we can subtract when performing the analysis. 
+    def _precalculate_dead_pixels(self) -> np.array: 
+        """ Takes a list of reference images, and finds the dead pixels by
+            calculating the ratio standard deviation / max(average, 1) of the 
+            same pixel across the reference images. The dead pixels are the ones 
+            with the lowest std. 
+            Sets the member variables that are later used in the method
+            _subtract_dead_pixels(). 
+            
+            Assumptions: 
+            - Dead pixels have high median
+            
+            So dead pixels are the ones with the smallest ratio
+            1 / max(median, 1)
         """
         # Load 
-        sources = [args[0] for args in self.reference_args]
-        dfs = [self._load(source) for source in sources]
+        dfs = [self._load(source) for source in self.references]
         
         # Input validation
-        assert(len(dfs) >= 2)
         ref_arr = self._df_to_array(dfs[0])
-        assert(all(ref_arr.shape == self._df_to_array(df).shape\
-                   for df in dfs[1:]))
+        assert all(ref_arr.shape == self._df_to_array(df).shape\
+                   for df in dfs[1:]), "MOTMLE assumes that all images have the same shape."
         
-        # Convert to np array
+        # Convert to np array and reshape
         arrays = [self._df_to_array(df) for df in dfs]
+        arrays = [arr[:, None] for arr in arrays]      
         
-        # Find the pixels which are same for all arrays (std == 0) 
+        # Find the pixels which are same for all arrays (std small) 
         stacked_array = np.concatenate(arrays, axis=1)
-        std_array = np.std(stacked_array, axis=1)
-        print("std_array")
+        signal_std = np.std(stacked_array, axis=1)
+        signal_mean = np.median(stacked_array, axis=1)
+        signal_mean_without_zeros = np.where(signal_mean < 1, np.ones_like(signal_mean), signal_mean)
+        ratio = np.divide(np.ones_like(signal_std), signal_mean_without_zeros) 
+        
+        print(f"There were {np.count_nonzero(signal_std)} pixels with non-zero std and {np.count_nonzero(signal_std == 0)} pixels with zero std.") 
+        percentile = np.percentile(ratio, self.dead_pixel_percentile, axis=0)
         
         # Construct the background coming from dead pixels
-        self.dead_pixel_bg = np.where(std_array == 0.0, ref_arr, 0.0 * ref_arr)
-        self.dead_pixel_signal = np.sum(self.dead_pixel_bg)
+        self.dead_pixels = np.where(ratio <= percentile, ref_arr, 0.0 * ref_arr)
+        self.dead_pixel_sum = np.sum(self.dead_pixels)
+        
+        # Create heatmaps
+        self._plot_dead_pixels(signal_mean, ratio, signal_std, self.dead_pixels)
         return 
+    
+    def _plot_dead_pixels(self, signal_mean, ratio, signal_std, dead_pixels): 
+        """ Create heatmaps of the signal mean, ratio, std and estimated
+            dead pixels. 
+        """
+        arrays = [signal_mean.reshape((self.c.Ynum, self.c.Xnum)),
+                  ratio.reshape((self.c.Ynum, self.c.Xnum)),
+                  signal_std.reshape((self.c.Ynum, self.c.Xnum)),
+                  dead_pixels.reshape((self.c.Ynum, self.c.Xnum))]
+        titles = ["Mean", "Ratio", "Std", "Dead pixels"]
+
+        fig, axs = plt.subplots(nrows=2, 
+                                ncols=2, 
+                                figsize=(12, 12),
+                                subplot_kw={'xticks': [], 'yticks': []})
+        
+        for ax, arr, title in zip(axs.flatten(), arrays, titles): 
+            print(ax)
+            print(arr)
+            ax.imshow(arr, cmap='hot', interpolation='nearest')
+            ax.set_title(title)
+            
+        plt.tight_layout()
+        plt.show()   
+            
+        return
+    
+    def _subtract_dead_pixels(self, data: dict): 
+        """ Subtracts the values of the dead pixels from the z-values of the 
+            data. Replaces the value with 0 if they become negative. 
+        """
+    
+        print("Array before subtraction: ", data["z"], "with sum", np.sum(data["z"]))
+        array_z = data["z"] 
+        array_z_without_dead_pixels = np.maximum(np.zeros_like(array_z), array_z - self.dead_pixels)
+        data["z"] = array_z_without_dead_pixels
+        print("Array after subtraction: ", data["z"], "with sum", np.sum(data["z"]))
+        return
         
     def _preprocess(self, df: pd.DataFrame, mode: str): 
         """ Takes the ssd image data as pandas dataframe and converts into 
@@ -378,14 +415,11 @@ class MOTMLE():
         print("R^2 = ", statistics["R^2"])
         print("*******************")
         
-    
-""" Default instance """
-
-mot_mle = MOTMLE(c=c)
-perform_analysis = mot_mle.perform_analysis
-    
 
 if __name__=="__main__":
+    
+    mot_mle = MOTMLE(c=c_ccd, references=[], do_subtract_dead_pixels=False)
+    perform_analysis = mot_mle.perform_analysis
     
     for i in list(range(1, 10)): 
         for mode in ["mot number"]: 

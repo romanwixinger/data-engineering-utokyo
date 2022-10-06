@@ -10,7 +10,7 @@ plots the region around the peaks as histogram.
 
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ import matplotlib.dates as md
 import datetime as dt
 import math
 
-from constants.constants import plotting_params
+from src.constants.constants import plotting_params
 plt.rcParams.update(plotting_params)
 
 
@@ -115,7 +115,7 @@ class Peak(object):
 
         return 
     
-    def _ts_ns_to_timestamp(self, ts_list: list[int]): 
+    def _ts_ns_to_timestamp(self, ts_list: list): 
         if type(ts_list) == int: 
             ts = ts_list
             return dt.datetime.fromtimestamp(ts / 1000000000)

@@ -11,13 +11,12 @@ which creates big amounts of data.
 """
 
 import sys
-sys.path.insert(0,'..')
-
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import pandas as pd
 import time
 
-from recorders.recorder import Recorder
+from src.recorders.recorder import Recorder
 
 
 class SimulationRecorder(Recorder): 

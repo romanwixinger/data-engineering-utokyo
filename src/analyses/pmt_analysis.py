@@ -9,12 +9,12 @@ PMT Analysis.
 
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import pandas as pd
 
-from recorders.pmt_recorder import PMTRecorder
-from analyses.analysis import Analysis, ResultParameter
+from src.recorders.pmt_recorder import PMTRecorder
+from src.analyses.analysis import Analysis, ResultParameter
 
 
 class PMTAnalysis(Analysis): 

@@ -8,13 +8,13 @@ Laser recorder.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 import csv
 
-from recorders.recorder import Recorder
+from src.recorders.recorder import Recorder
 
 
 class LaserRecorder(Recorder): 

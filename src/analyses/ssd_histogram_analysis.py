@@ -8,14 +8,14 @@ SSD Histogram
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import matplotlib.pyplot as plt
 
-import constants as c
-from recorders.ssd_recorder import SSDParser
-from analyses.analysis import Analysis
-from analyses.peak_finder import PeakFinder
+import src.constants as c
+from src.recorders.ssd_recorder import SSDParser
+from src.analyses.analysis import Analysis
+from src.analyses.peak_finder import PeakFinder
 
 plt.rcParams.update(c.plotting_params) 
 

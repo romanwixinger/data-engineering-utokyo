@@ -10,19 +10,20 @@ number and the power. The reports are then a collection of results as a table.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import pandas as pd
 
-from recorders.file_recorder import FileRecorder, FileParser
-from fit_mot_number import perform_analysis
-from analyses.analysis import Analysis, ResultParameter
+from src.recorders.file_recorder import FileRecorder, FileParser
+from src.analyses.fit_mot_number import MOTMLE
+from src.analyses.analysis import Analysis, ResultParameter
     
     
 class ImageAnalysis(Analysis): 
     
     def __init__(self,
                  recorder: FileRecorder or FileParser,
+                 perform_analysis: callable, 
                  result_param: ResultParameter,
                  time_interval: tuple=None,
                  min_signal: int=0):
@@ -31,6 +32,7 @@ class ImageAnalysis(Analysis):
             recorder=recorder, 
             result_param=result_param
             ) 
+        self.perform_analysis = perform_analysis
         self.time_interval = time_interval
         self.min_signal = min_signal
         
@@ -55,7 +57,7 @@ class ImageAnalysis(Analysis):
             source = row["filepath"]
             filename = row["filename"]
             target = self.image_src + filename + self.image_extension
-            statistics = perform_analysis(source=source, target=target, mode="mot number", min_signal=self.min_signal)
+            statistics = self.perform_analysis(source=source, target=target, mode="mot number", min_signal=self.min_signal)
             statistics_list.append(statistics)
             
         # Enrich dataframe with results
@@ -65,7 +67,7 @@ class ImageAnalysis(Analysis):
         self._save_results(enriched_df)
         return enriched_df
     
-    def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list[dict]) -> pd.DataFrame: 
+    def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list) -> pd.DataFrame: 
         """ Takes the table from the ImageRecorder and the statistics generated 
             by the fit_mot_data function. Combines the two in an enriched 
             dataframe. 
@@ -81,8 +83,13 @@ class ImageAnalysis(Analysis):
     
 if __name__=="__main__": 
     
+    from constants.mot_constants import c_ccd
+    perform_analysis = MOTMLE(c=c_ccd, 
+                              references=[], 
+                              do_subtract_dead_pixels=False).perform_analysis
+
     result_param = ResultParameter(
-        image_src="../../plots/20220829/images/",
+        image_src="../../plots/20220829/image/",
         image_extension=".png",
         result_filepath="../../results/20220829/"+"image_analysis_results.csv"
         )
@@ -92,6 +99,7 @@ if __name__=="__main__":
         )
     image_analysis = ImageAnalysis(
         recorder=file_recorder,
+        perform_analysis=perform_analysis, 
         result_param=result_param
         )
     enriched_df = image_analysis.run()

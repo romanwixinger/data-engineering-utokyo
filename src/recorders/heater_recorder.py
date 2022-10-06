@@ -7,15 +7,14 @@ Created on Tue Sep  6 11:06:02 2022
 Log of the IR heater output percentage for target heating. 
 """
 
-
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 import csv
 
-from recorders.recorder import Recorder
+from src.recorders.recorder import Recorder
 
 
 class HeaterRecorder(Recorder): 

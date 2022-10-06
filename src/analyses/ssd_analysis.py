@@ -16,7 +16,7 @@ This allows us to get visualizations for all peaks.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import os
 import numpy as np
@@ -26,12 +26,12 @@ import pandas as pd
 import datetime as dt
 import queue
 
-import constants.constants as c
-from recorders.ssd_recorder import SSDRecorder, SSDParser
-from recorders.file_recorder import FileParser
-from analyses.analysis import Analysis, ResultParameter
-from analyses.peak_finder import PeakFinder
-from analyses.mkdir import mkdir_if_not_exist
+import src.constants.constants as c
+from src.recorders.ssd_recorder import SSDRecorder, SSDParser
+from src.recorders.file_recorder import FileParser
+from src.analyses.analysis import Analysis, ResultParameter
+from src.analyses.peak_finder import PeakFinder
+from src.analyses.mkdir import mkdir_if_not_exist
 
 
 plt.rcParams.update(c.plotting_params)
@@ -134,7 +134,7 @@ class SSDAnalysis(Analysis):
         
         return fig
     
-    def _ts_ns_to_timestamp(self, ts_list: list[int]): 
+    def _ts_ns_to_timestamp(self, ts_list: list): 
         return [dt.datetime.fromtimestamp(ts // 1000000000) for ts in ts_list]
     
     def _get_new_result_df(self, peaks: list): 

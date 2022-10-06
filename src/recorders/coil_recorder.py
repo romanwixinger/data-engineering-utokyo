@@ -10,12 +10,12 @@ This text file is the log of the relay switch.
 
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')
 
 import numpy as np
 import pandas as pd
 
-from recorders.recorder import Recorder
+from src.recorders.recorder import Recorder
 
 
 class CoilRecorder(Recorder): 
