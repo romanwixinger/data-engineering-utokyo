@@ -26,6 +26,20 @@ class PathHelper():
         pattern = re.compile(match)
         return [s for s in all_filepaths if pattern.match(s)]
     
+    @classmethod 
+    def get_folders(cls, folder: str, match: str=".*ccd_.*.xlsx"): 
+        """ Takes a filepath to a folder, loads all filepaths to files that 
+            match and return a list of the unique folders (two levels above) 
+            in which they were found. This method can be used to find the 
+            metadata (all_data.csv) of csv files. 
+        """
+        
+        all_filepaths = cls.get_all_filepaths_in_folder(folder)
+        pattern = re.compile(match)
+        filepaths = [s for s in all_filepaths if pattern.match(s)]
+        folder_set = set((os.path.dirname(os.path.dirname(os.path.dirname(fp))) for fp in filepaths))
+        return list(folder_set)
+        
     @classmethod
     def get_all_filepaths_in_folder(cls, folder: str): 
         filepaths = []

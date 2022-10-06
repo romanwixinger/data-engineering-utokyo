@@ -17,7 +17,7 @@ Sources:
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import os
 from datetime import datetime
@@ -28,37 +28,173 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-import mot_constants as c_ccd
-import mot_constants_cmos as c_cmos
-
-
-# Settings
-c = c_ccd
+from src.constants.mot_constants import c_ccd
 
 
 class MOTMLE():
     
-    def __init__(self, c, reference_dfs: list[pd.DataFrame]): 
+    def __init__(self, c, references: list, do_subtract_dead_pixels: bool=True, dead_pixel_percentile: float=100.0/20): 
+        # Settings
         self.c = c
-        self.dead_pixels = None
+        self.references = references
+        self.min_nr_of_references = 2
+        self.do_subtract_dead_pixels = do_subtract_dead_pixels
+        
+        # Build a reference of the background coming from dead pixels
+        self.dead_pixels = np.zeros((c.Xnum * c.Ynum))
+        self.dead_pixel_sum = 0
+        self.dead_pixel_percentile = dead_pixel_percentile
+        if self.do_subtract_dead_pixels: 
+            self._precalculate_dead_pixels()
+            assert len(self.references) >= self.min_nr_of_references, f"MOTMLE needs at least {self.min_nr_of_references} reference images."
+        
+    def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0): 
+        """ Loads the image data, fits a 2D gaussian model on it, generates a plot
+            of the original data and a fit, saves the plot, and returns the 
+            statistics of the fit. 
+            Source is the filepath of the original data and target is the filepath 
+            of the plot. The mode can be either 'power' or 'mot number'. 
+            If the total sum of the df is less than min_signal, then we 
+            terminate the analysis. 
+        """
+        
+        # Load data
+        df = self._load(source=source)
+        data = self._preprocess(df, mode=mode)
+        
+        # Subtract dead pixels
+        if self.do_subtract_dead_pixels: 
+            self._subtract_dead_pixels(data)
+        
+        # Check if the image is promising
+        total_sum = np.sum(data["z"]) 
+        if total_sum < min_signal: 
+            print(f"The image was discarded because the total signal is {total_sum} < {min_signal} after subtraction of the background of {self.dead_pixel_sum}")
+            return {
+                "fit_successful": False, 
+                "total_sum": total_sum, 
+                "enough_pulses": False,
+                }
+        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal} + {self.dead_pixel_sum} after subtraction of the background of {self.dead_pixel_sum}.")
+            
+        # Fit MLE
+        statistics = self._fitting(model=self.c.two_D_gauss, data=data, mode=mode)
+        statistics["total_sum"] = total_sum
+        statistics["enough_pulses"] = True
+        
+        # Plot 3D
+        time = self._time(source)
+        fit_data = self._generate_fit_data(self.c.two_D_gauss, data, statistics)\
+            if statistics["fit_successful"] else None
+        self._plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
+        
+        # Plot heatmap
+        heatmap_target = target[:-4] + "_heatmap" + target[-4:] 
+        self._plot_heatmap(data, fit_data, target=heatmap_target, mode=mode, time=time)
 
-    def load(self, source: str) -> pd.DataFrame: 
+        # Print and return statistics
+        self._print_stats(statistics)
+        return statistics
+
+    def _load(self, source: str) -> pd.DataFrame: 
         """ Load the pandas dataframe and the right constants. """
         if ".xlsx" in source: 
             df = pd.read_excel(source, index_col=None, header=None)
         else: 
             df = pd.read_csv(source, index_col=None, header=None)
         return df
-
-    def find_dead_pixels(self): 
-        """ TODO: Implement method which takes the reference dfs and finds the 
-            pixels which always have the same value. Create a vectorized 
-            method which subtract this noise. 
-        """
-        pass
-        
     
-    def preprocess(self, df: pd.DataFrame, mode: str): 
+    def _df_to_array(self, df: pd.DataFrame) -> np.array: 
+        """ Takes the image as df and returns it as np.array. 
+        """
+        return df\
+            .iloc[self.c.Ymin:self.c.Ymax, self.c.Xmin:self.c.Xmax]\
+            .to_numpy()\
+            .reshape(-1)
+        
+    def _precalculate_dead_pixels(self) -> np.array: 
+        """ Takes a list of reference images, and finds the dead pixels by
+            calculating the ratio standard deviation / max(average, 1) of the 
+            same pixel across the reference images. The dead pixels are the ones 
+            with the lowest std. 
+            Sets the member variables that are later used in the method
+            _subtract_dead_pixels(). 
+            
+            Assumptions: 
+            - Dead pixels have high median
+            
+            So dead pixels are the ones with the smallest ratio
+            1 / max(median, 1)
+        """
+        # Load 
+        dfs = [self._load(source) for source in self.references]
+        
+        # Input validation
+        ref_arr = self._df_to_array(dfs[0])
+        assert all(ref_arr.shape == self._df_to_array(df).shape\
+                   for df in dfs[1:]), "MOTMLE assumes that all images have the same shape."
+        
+        # Convert to np array and reshape
+        arrays = [self._df_to_array(df) for df in dfs]
+        arrays = [arr[:, None] for arr in arrays]      
+        
+        # Find the pixels which are same for all arrays (std small) 
+        stacked_array = np.concatenate(arrays, axis=1)
+        signal_std = np.std(stacked_array, axis=1)
+        signal_mean = np.median(stacked_array, axis=1)
+        signal_mean_without_zeros = np.where(signal_mean < 1, np.ones_like(signal_mean), signal_mean)
+        ratio = np.divide(np.ones_like(signal_std), signal_mean_without_zeros) 
+        
+        print(f"There were {np.count_nonzero(signal_std)} pixels with non-zero std and {np.count_nonzero(signal_std == 0)} pixels with zero std.") 
+        percentile = np.percentile(ratio, self.dead_pixel_percentile, axis=0)
+        
+        # Construct the background coming from dead pixels
+        self.dead_pixels = np.where(ratio <= percentile, ref_arr, 0.0 * ref_arr)
+        self.dead_pixel_sum = np.sum(self.dead_pixels)
+        
+        # Create heatmaps
+        self._plot_dead_pixels(signal_mean, ratio, signal_std, self.dead_pixels)
+        return 
+    
+    def _plot_dead_pixels(self, signal_mean, ratio, signal_std, dead_pixels): 
+        """ Create heatmaps of the signal mean, ratio, std and estimated
+            dead pixels. 
+        """
+        arrays = [signal_mean.reshape((self.c.Ynum, self.c.Xnum)),
+                  ratio.reshape((self.c.Ynum, self.c.Xnum)),
+                  signal_std.reshape((self.c.Ynum, self.c.Xnum)),
+                  dead_pixels.reshape((self.c.Ynum, self.c.Xnum))]
+        titles = ["Mean", "Ratio", "Std", "Dead pixels"]
+
+        fig, axs = plt.subplots(nrows=2, 
+                                ncols=2, 
+                                figsize=(12, 12),
+                                subplot_kw={'xticks': [], 'yticks': []})
+        
+        for ax, arr, title in zip(axs.flatten(), arrays, titles): 
+            print(ax)
+            print(arr)
+            ax.imshow(arr, cmap='hot', interpolation='nearest')
+            ax.set_title(title)
+            
+        plt.tight_layout()
+        plt.show()   
+            
+        return
+    
+    def _subtract_dead_pixels(self, data: dict): 
+        """ Subtracts the values of the dead pixels from the z-values of the 
+            data. Replaces the value with 0 if they become negative. 
+        """
+    
+        print("Array before subtraction: ", data["z"], "with sum", np.sum(data["z"]))
+        array_z = data["z"] 
+        array_z_without_dead_pixels = np.maximum(np.zeros_like(array_z), array_z - self.dead_pixels)
+        data["z"] = array_z_without_dead_pixels
+        print("Array after subtraction: ", data["z"], "with sum", np.sum(data["z"]))
+        return
+        
+    def _preprocess(self, df: pd.DataFrame, mode: str): 
         """ Takes the ssd image data as pandas dataframe and converts into 
             numpy arrays. Converts the unit of the z-axis. 
         """
@@ -68,15 +204,15 @@ class MOTMLE():
         y_data= np.repeat(np.arange(self.c.Ymin, self.c.Ymax), self.c.Xnum) * self.c.Cell_ysize * self.c.b
     
         # Scale z
-        scaling_factor = self.get_scaling_factor(mode)
-        array = df.iloc[self.c.Ymin:self.c.Ymax, self.c.Xmin:self.c.Xmax]
-        z_data = array.to_numpy().reshape(-1) * scaling_factor
+        scaling_factor = self._get_scaling_factor(mode)
+        array = self._df_to_array(df)
+        z_data = array * scaling_factor
         
         # Combine
         data = {"x": x_data, "y": y_data, "z": z_data}
         return data
     
-    def get_scaling_factor(self, mode: str) -> float: 
+    def _get_scaling_factor(self, mode: str) -> float: 
         """ The unit of the z axis can be converted using a scaling factor. This 
             function returns the scaling factor, which can be determined from the
             mode, which is either 'power' or 'mot number'. 
@@ -87,14 +223,14 @@ class MOTMLE():
             }[mode]
         return scaling_factor
     
-    def fitting(self, model: callable, data: dict, mode: str):
+    def _fitting(self, model: callable, data: dict, mode: str):
         """ Fit the model to the data."""
     
         # Extraction
         x, y, z = data["x"], data["y"], data["z"]
     
         # Initial guess for fit parameters
-        p0 = self.get_initial_guess(data, mode)
+        p0 = self._get_initial_guess(data, mode)
         
         # Fitting: popt is the best estimate, pcov is the covariance output
         try: 
@@ -117,9 +253,9 @@ class MOTMLE():
         r_squared = 1 - (rss / tss)     # Coefficient of determination R^2
         
         # Return statistics
-        return self.extract_statistics(r_squared, chi2, popt, pcov, perr)
+        return self._extract_statistics(r_squared, chi2, popt, pcov, perr)
     
-    def extract_statistics(self, r_squared, chi2, popt, pcov, perr): 
+    def _extract_statistics(self, r_squared, chi2, popt, pcov, perr): 
         return {
             "A": popt[0],
             "A_unc": perr[0],
@@ -143,7 +279,7 @@ class MOTMLE():
             "fit_successful": True
             }
         
-    def get_initial_guess(self, data: dict, mode: str): 
+    def _get_initial_guess(self, data: dict, mode: str): 
         """ Proposes initial guesses for the fitting parameters with heuristics. 
         """
         x, y, z = data["x"], data["y"], data["z"] 
@@ -170,7 +306,7 @@ class MOTMLE():
         p0 = np.array([A, sigma_x, sigma_y, mu_x, mu_y, C])
         return p0
         
-    def generate_fit_data(self, model: callable, data: dict, statistics: dict): 
+    def _generate_fit_data(self, model: callable, data: dict, statistics: dict): 
         """ Takes the x, y values of the data and the fit parameter, and returns
             fitted z values on a x, y grid in the same format as the data. 
         """
@@ -190,7 +326,7 @@ class MOTMLE():
         fit_data = {"x": X, "y": Y, "z": fit_z}
         return fit_data
     
-    def plot_fit_result(self, data: dict, fit_data: dict, target: str, mode: str, time: str):
+    def _plot_fit_result(self, data: dict, fit_data: dict, target: str, mode: str, time: str):
         """ Plots the 3d data and the fit. Saves the image to the url. 
         """
         # Setup figure
@@ -224,7 +360,7 @@ class MOTMLE():
         plt.savefig(target, dpi=300)
         plt.show(block=False)
         
-    def plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str):
+    def _plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str):
         """ Plots the 3d data and the fit. Saves the image to the url. 
         """
         
@@ -252,14 +388,14 @@ class MOTMLE():
         plt.savefig(target, dpi=300)
         plt.show()   
         
-    def time(self, source: str): 
+    def _time(self, source: str): 
         """ Return the time when the file was created. 
         """
         
         timestamp = os.path.getctime(source)
         return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     
-    def print_stats(self, statistics: dict):
+    def _print_stats(self, statistics: dict):
         if not statistics["fit_successful"]: 
             print(" Result ***********")
             print("Fit was not succesful.")
@@ -279,57 +415,11 @@ class MOTMLE():
         print("R^2 = ", statistics["R^2"])
         print("*******************")
         
-    def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0): 
-        """ Loads the image data, fits a 2D gaussian model on it, generates a plot
-            of the original data and a fit, saves the plot, and returns the 
-            statistics of the fit. 
-            Source is the filepath of the original data and target is the filepath 
-            of the plot. The mode can be either 'power' or 'mot number'. 
-            If the total sum of the df is less than min_signal, then we 
-            terminate the analysis. 
-        """
-        # Load data
-        df = self.load(source=source)
-        
-        # Check if the image is promising
-        total_sum = df.sum().sum() 
-        if total_sum < min_signal: 
-            print(f"The image was discarded because the total signal is {total_sum} < {min_signal}.")
-            return {
-                "fit_successful": False, 
-                "total_sum": total_sum, 
-                "enough_pulses": False,
-                }
-        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal}.")
-            
-        # Fit MLE
-        data = self.preprocess(df, mode=mode)
-        statistics = self.fitting(model=self.c.two_D_gauss, data=data, mode=mode)
-        statistics["total_sum"] = total_sum
-        statistics["enough_pulses"] = True
-        
-        # Plot 3D
-        time = self.time(source)
-        fit_data = self.generate_fit_data(self.c.two_D_gauss, data, statistics)\
-            if statistics["fit_successful"] else None
-        self.plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
-        
-        # Plot heatmap
-        heatmap_target = target[:-4] + "_heatmap" + target[-4:] 
-        self.plot_heatmap(data, fit_data, target=heatmap_target, mode=mode, time=time)
-
-        # Print and return statistics
-        self.print_stats(statistics)
-        return statistics
-    
-    
-""" Default instance """
-
-mot_mle = MOTMLE(c=c)
-perform_analysis = mot_mle.perform_analysis
-    
 
 if __name__=="__main__":
+    
+    mot_mle = MOTMLE(c=c_ccd, references=[], do_subtract_dead_pixels=False)
+    perform_analysis = mot_mle.perform_analysis
     
     for i in list(range(1, 10)): 
         for mode in ["mot number"]: 

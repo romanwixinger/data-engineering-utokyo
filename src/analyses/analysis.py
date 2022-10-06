@@ -7,34 +7,45 @@ Created on Wed Sep  7 09:43:50 2022
 Base class for analyses. 
 """
 
+import sys
+sys.path.insert(0,'../..')  # Set src as top-level
+
 import os
 from abc import abstractmethod
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from src.recorders.recorder import Recorder
 
-""" Class """
+
+class ResultParameter(object): 
+    """ Specifies how the result of the analysis should be saved. 
+    """
     
+    def __init__(self, 
+                 image_src: str, 
+                 image_extension: str, 
+                 result_filepath: str): 
+        self.image_src = image_src
+        self.image_extension = image_extension
+        self.result_filepath = result_filepath
+
 
 class Analysis(object): 
     """ Class for analyzing relationsships between experimental parameters and measurements. 
     """
         
     def __init__(self, 
-                 recorder, 
-                 filepath, 
-                 name, 
-                 image_src: str="../../plots/", 
-                 image_extension: str=".png",
-                 result_filepath: str=""): 
+                 recorder: Recorder, 
+                 name: str, 
+                 result_param: ResultParameter): 
         self.recorder = recorder
-        self.filepath = filepath
         self.name = name
         self.last_updated = 0
-        self.image_src = image_src
-        self.image_extension = ".png"
-        self.result_filepath = result_filepath
+        self.image_src = result_param.image_src
+        self.image_extension = result_param.image_extension
+        self.result_filepath = result_param.result_filepath
         
     def run(self): 
         if self.is_up_to_date():

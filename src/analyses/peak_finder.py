@@ -8,13 +8,13 @@ Finds peaks in the SSD pulse data.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from analyses.peak import Peak
+from src.analyses.peak import Peak
         
     
 class PeakFinder(object): 
@@ -46,7 +46,7 @@ class PeakFinder(object):
         self.nr_of_pulses = 0               # [1]
         self.background = 0                 # [1/ns]
     
-    def get_new_peaks(self, df) -> list[Peak]: 
+    def get_new_peaks(self, df) -> list: 
         """ Loads the new data, estimates the background, finds the peaks and
             returns them. 
         """
@@ -74,7 +74,7 @@ class PeakFinder(object):
         assert self.processed_up_to > self.start_timestamp, "Beginning should be before the end."
         self.background = self.nr_of_pulses / (self.processed_up_to - self.start_timestamp)
         
-    def _find_peaks(self, new_df: pd.DataFrame) -> list[int]:
+    def _find_peaks(self, new_df: pd.DataFrame) -> list:
         """ Uses a sliding window approach to find times (peaks) in which many
             signals were recorded. Returns the peaks as a list of timestamps. 
         """
@@ -107,7 +107,7 @@ class PeakFinder(object):
         
         return peak_timestamps, metadata
         
-    def _find_peaks_in_1d_array(self, array: list[float], timestamps: list[int]): 
+    def _find_peaks_in_1d_array(self, array: list, timestamps: list): 
         """ Takes the array and finds local maxima which have at least a 
             certain time difference. 
         """
@@ -138,7 +138,7 @@ class PeakFinder(object):
                 
         return peak_timestamps
     
-    def _optimize_position(self, df: pd.DataFrame, peak_timestamps: list) -> list[int]: 
+    def _optimize_position(self, df: pd.DataFrame, peak_timestamps: list) -> list: 
         optimized_peaks = []
         for ts in peak_timestamps: 
             search_df = df[(df.timestamp >= ts-self.search_radius)\
@@ -169,7 +169,7 @@ class PeakFinder(object):
         peak_ts = bin_edges[max_index] + (max_val-min_val)/nbins/2.0
         return int(peak_ts)
     
-    def _generate_peaks(self, df: pd.DataFrame, peak_timestamps: list[int]) -> list[Peak]:
+    def _generate_peaks(self, df: pd.DataFrame, peak_timestamps: list) -> list:
         """
         Takes the new data and a list of the timestamps of the new peaks, and
         builds a list of the Peak instances. 

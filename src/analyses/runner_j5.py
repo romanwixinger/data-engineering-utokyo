@@ -8,14 +8,14 @@ Runner for analyses on the J5 computer.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 from datetime import datetime
 
-from analyses.ssd_analysis import SSDAnalysisWrapper
-from analyses.image_analysis import ImageAnalysis
-from analyses.mkdir import create_folders
-from analyses.runner import Runner
+from src.analyses.ssd_analysis import SSDAnalysisWrapper
+from src.analyses.image_analysis import ImageAnalysis
+from src.analyses.mkdir import create_folders
+from src.analyses.runner import Runner
         
     
 date = "20220918"

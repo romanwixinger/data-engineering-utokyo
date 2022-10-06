@@ -2,21 +2,21 @@
 
 import os
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')  # Set src as top-level
 
 import unittest
 import pandas as pd
 from shutil import copy
 
-from constants import unittest_short_loc, unittest_long_loc
+from src.constants.constants import unittest_short_loc, unittest_long_loc
 
-from recorders.ssd_recorder import SSDRecorder
-from recorders.pmt_recorder import PMTRecorder
-from recorders.coil_recorder import CoilRecorder
-from recorders.gauge_recorder import GaugeRecorder
-from recorders.laser_recorder import LaserRecorder
-from recorders.ion_recorder import IonRecorder
-from recorders.heater_recorder import HeaterRecorder
+from src.recorders.ssd_recorder import SSDRecorder
+from src.recorders.pmt_recorder import PMTRecorder
+from src.recorders.coil_recorder import CoilRecorder
+from src.recorders.gauge_recorder import GaugeRecorder
+from src.recorders.laser_recorder import LaserRecorder
+from src.recorders.ion_recorder import IonRecorder
+from src.recorders.heater_recorder import HeaterRecorder
 
 
 n = 6

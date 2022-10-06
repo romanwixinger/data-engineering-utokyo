@@ -10,10 +10,9 @@ csv table which you want to map to a real-time recorder object.
 """
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')
 
 import os
-import numpy as np
 import pandas as pd
 import time
 import datetime
@@ -116,16 +115,9 @@ class Recorder(object):
         )
     
     def _timestamp_to_datetimes(self, df: pd.DataFrame): 
-        """ Takes a pandas dataframe with a timestamp column (int) and also adds date datetime, datetime_ms, datetime_μs. 
+        """ Takes a dataframe with a timestamp column (int) and adds datetime.
         """
-        # Conversion functions
-        conversion_to_datetime_μs = lambda x: datetime.datetime.fromtimestamp(x/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f')
-        conversion_to_datetime_ms = lambda x: datetime.datetime.fromtimestamp(x/1000000000).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         conversion_to_datetime = lambda x: datetime.datetime.fromtimestamp(x/1000000000).strftime('%Y-%m-%d %H:%M:%S')
-
-        # Apply conversions
-        df["datetime_μs"] = df["timestamp"].apply(conversion_to_datetime_μs)
-        df["datetime_ms"] = df["timestamp"].apply(conversion_to_datetime_ms)
         df["datetime"] = df["timestamp"].apply(conversion_to_datetime)
     
     @abstractmethod

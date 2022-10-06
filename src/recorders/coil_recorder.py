@@ -10,12 +10,12 @@ This text file is the log of the relay switch.
 
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'../..')
 
 import numpy as np
 import pandas as pd
 
-from recorders.recorder import Recorder
+from src.recorders.recorder import Recorder
 
 
 class CoilRecorder(Recorder): 
@@ -29,7 +29,5 @@ class CoilRecorder(Recorder):
             )
     
     def _harmonize_time(self): 
-        self._table_df["datetime_μs"] = self._table_df["Time"].apply(lambda s: s+"000")
-        self._table_df["datetime_ms"] = self._table_df["Time"]
-        self._table_df["datetime"] = self._table_df["Time"].apply(lambda s: s[:-4])
+        self._table_df["datetime"] = self._table_df["Time"]
         self._table_df["timestamp"] = self._table_df["Time"].apply(pd.Timestamp).values.astype(np.int64)
