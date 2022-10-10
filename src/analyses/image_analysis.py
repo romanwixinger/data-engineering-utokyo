@@ -56,8 +56,13 @@ class ImageAnalysis(Analysis):
         for i, row in df.iterrows(): 
             source = row["filepath"]
             filename = row["filename"]
+            time = str(row["datetime"])
             target = self.image_src + filename + self.image_extension
-            statistics = self.perform_analysis(source=source, target=target, mode="mot number", min_signal=self.min_signal)
+            statistics = self.perform_analysis(source=source, 
+                                               target=target, 
+                                               mode="mot number", 
+                                               min_signal=self.min_signal, 
+                                               time=time)
             statistics_list.append(statistics)
             
         # Enrich dataframe with results

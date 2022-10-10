@@ -48,7 +48,7 @@ class MOTMLE():
             self._precalculate_dead_pixels()
             assert len(self.references) >= self.min_nr_of_references, f"MOTMLE needs at least {self.min_nr_of_references} reference images."
         
-    def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0): 
+    def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0, time: str="unknown time"): 
         """ Loads the image data, fits a 2D gaussian model on it, generates a plot
             of the original data and a fit, saves the plot, and returns the 
             statistics of the fit. 
@@ -83,7 +83,6 @@ class MOTMLE():
         statistics["enough_pulses"] = True
         
         # Plot 3D
-        time = self._time(source)
         fit_data = self._generate_fit_data(self.c.two_D_gauss, data, statistics)\
             if statistics["fit_successful"] else None
         self._plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
@@ -387,13 +386,6 @@ class MOTMLE():
         plt.tight_layout()
         plt.savefig(target, dpi=300)
         plt.show()   
-        
-    def _time(self, source: str): 
-        """ Return the time when the file was created. 
-        """
-        
-        timestamp = os.path.getctime(source)
-        return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     
     def _print_stats(self, statistics: dict):
         if not statistics["fit_successful"]: 
