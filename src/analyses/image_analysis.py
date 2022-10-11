@@ -35,6 +35,17 @@ class ImageAnalysis(Analysis):
         self.perform_analysis = perform_analysis
         self.time_interval = time_interval
         self.min_signal = min_signal
+        self.was_run_before = False
+        
+    def is_up_to_date(self): 
+        """ In the beginning, the recorder might be up-to-date, but the
+            analysis was not run yet.
+        """
+        return all((
+            self.was_run_before,
+            self.recorder.is_up_to_date(),
+            self.last_updated == self.recorder.last_updated
+            ))
         
     def _query_df(self, df: pd.DataFrame) -> pd.DataFrame(): 
             """ Narrows down the rows to the one in the time interval. 
@@ -70,6 +81,7 @@ class ImageAnalysis(Analysis):
         
         # Save the result
         self._save_results(enriched_df)
+        self.was_run_before = True
         return enriched_df
     
     def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list) -> pd.DataFrame: 
