@@ -22,6 +22,15 @@ class StaticRecorder():
     def __init__(self, df: pd.DataFrame):
         self.df = df
         
+        # Public variables from Recorder. 
+        self.filepath = None
+        self.has_metadata = False
+        self.delimiter = None
+        self.always_update = False
+        self.encoding = None
+        self.read_data_lines = len(df.index)
+        self.last_updated = 0
+        
     def get_table(self) -> pd.DataFrame: 
         return self.df
     
