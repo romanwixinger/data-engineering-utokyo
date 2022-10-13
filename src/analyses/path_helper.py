@@ -37,6 +37,7 @@ class PathHelper():
         all_filepaths = cls.get_all_filepaths_in_folder(folder)
         pattern = re.compile(match)
         filepaths = [s for s in all_filepaths if pattern.match(s)]
+        print(filepaths)
         folder_set = set((os.path.dirname(os.path.dirname(os.path.dirname(fp))) for fp in filepaths))
         return list(folder_set)
         

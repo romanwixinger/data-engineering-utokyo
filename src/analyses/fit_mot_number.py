@@ -171,8 +171,6 @@ class MOTMLE():
                                 subplot_kw={'xticks': [], 'yticks': []})
         
         for ax, arr, title in zip(axs.flatten(), arrays, titles): 
-            print(ax)
-            print(arr)
             ax.imshow(arr, cmap='hot', interpolation='nearest')
             ax.set_title(title)
             
@@ -313,8 +311,8 @@ class MOTMLE():
         popt = statistics["popt"]
     
         # Create a surface showing the result of fitting for a graph
-        fit_x = np.linspace(min(data["x"]), max(data["x"]), 200)
-        fit_y = np.linspace(min(data["y"]), max(data["y"]), 200)
+        fit_x = np.linspace(min(data["x"]), max(data["x"]), self.c.Xnum)
+        fit_y = np.linspace(min(data["y"]), max(data["y"]), self.c.Ynum)
         X, Y = np.meshgrid(fit_x, fit_y)
         
         # Evaluate the fitted model on the grid
@@ -375,7 +373,7 @@ class MOTMLE():
             ax.set_title("Camera signal")
         else: 
             z_fit = fit_data["z"]
-            z_arr_fit = z_fit.reshape((200, 200))
+            z_arr_fit = z_fit.reshape((self.c.Ynum, self.c.Xnum))
             fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(9, 6),
                             subplot_kw={'xticks': [], 'yticks': []})
             
@@ -383,6 +381,7 @@ class MOTMLE():
                 ax.imshow(arr, cmap='hot', interpolation='nearest')
                 ax.set_title(title)
     
+        fig.suptitle(f"Image recorded at {time}")
         plt.tight_layout()
         plt.savefig(target, dpi=300)
         plt.show()   
