@@ -249,10 +249,13 @@ class MOTMLE():
         tss = np.sum((o-np.mean(o))**2) # Total sum of squares = tss
         r_squared = 1 - (rss / tss)     # Coefficient of determination R^2
         
+        # Calculate sum of signal
+        signal_sum = np.sum(z)
+        
         # Return statistics
-        return self._extract_statistics(r_squared, chi2, popt, pcov, perr)
+        return self._extract_statistics(r_squared, chi2, popt, pcov, perr, signal_sum)
     
-    def _extract_statistics(self, r_squared, chi2, popt, pcov, perr): 
+    def _extract_statistics(self, r_squared, chi2, popt, pcov, perr, signal_sum): 
         return {
             "A": popt[0],
             "A_unc": perr[0],
@@ -273,7 +276,8 @@ class MOTMLE():
             "pcov": pcov,
             "perr": perr,
             "chi2": chi2,
-            "fit_successful": True
+            "fit_successful": True, 
+            "signal_sum": signal_sum
             }
         
     def _get_initial_guess(self, data: dict, mode: str): 
@@ -365,24 +369,27 @@ class MOTMLE():
         z = data["z"]
         z_arr = z.reshape((self.c.Ynum, self.c.Xnum))
         
+        # Case: Fit not successful -> Just original data
         if fit_data is None: 
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3),
                             subplot_kw={'xticks': [], 'yticks': []})
+            fig.suptitle(f"Image recorded at {time}")
     
-            ax.imshow(z_arr, cmap='hot', interpolation='nearest')
+            ax.imshow(z_arr, cmap='hot', interpolation='none')
             ax.set_title("Camera signal")
+            
+        # Case: Fit successful -> Original data and fit data
         else: 
             z_fit = fit_data["z"]
             z_arr_fit = z_fit.reshape((self.c.Ynum, self.c.Xnum))
             fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(9, 6),
                             subplot_kw={'xticks': [], 'yticks': []})
+            fig.suptitle(f"Image recorded at {time}")
             
             for ax, arr, title in zip(axs, [z_arr, z_arr_fit], ["Camera signal", "Fit"]): 
-                ax.imshow(arr, cmap='hot', interpolation='nearest')
+                ax.imshow(arr, cmap='hot', interpolation='none')
                 ax.set_title(title)
     
-        fig.suptitle(f"Image recorded at {time}")
-        plt.tight_layout()
         plt.savefig(target, dpi=300)
         plt.show()   
     

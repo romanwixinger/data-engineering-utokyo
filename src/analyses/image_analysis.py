@@ -92,7 +92,7 @@ class ImageAnalysis(Analysis):
         columns = list(df.columns) 
         new_columns = ["A", "A_unc", "sigma_x", "sigma_x_unc", "sigma_y", 
                        "sigma_y_unc", "mu_x", "mu_x_unc", "mu_y", "mu_y_unc", 
-                       "C", "C_unc", "X-squared", "p-value", "R^2"]
+                       "C", "C_unc", "X-squared", "p-value", "R^2", "signal_sum"]
         enriched_rows = [list(row) + [(stat[col] if stat["fit_successful"] else None) for col in new_columns] + [stat["fit_successful"]]\
                          for (i, row), stat in zip(df.iterrows(), statistics_list)]
         return pd.DataFrame(data=enriched_rows, columns=columns + new_columns + ["fit_successful"])
@@ -100,7 +100,7 @@ class ImageAnalysis(Analysis):
     
 if __name__=="__main__": 
     
-    from constants.mot_constants import c_ccd
+    from src.constants.mot_constants import c_ccd
     perform_analysis = MOTMLE(c=c_ccd, 
                               references=[], 
                               do_subtract_dead_pixels=False).perform_analysis
