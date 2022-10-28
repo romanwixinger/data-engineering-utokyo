@@ -25,7 +25,7 @@ This 2D plot is obtained by Maximum Likelihood Estimation with a Gaussian model 
 There are two environments in which this package has been tested: 
 
 ### Locally 
-You can clone the repository to your local computer, load the data to your computer, and run the code either in a Jupyter notebook or in a Python file. Checkout src/main.py as reference. 
+You can clone the repository to your local computer, load the data to your computer, and run the code either in a Jupyter notebook or in a Python file. Checkout src/notebooks/recorder_demo.ipynb, src/notebooks/ssd_analysis_demo.ipynb and src/main.py as reference. The notebooks work directly, because they use the sample data which is part of the repository. 
 
 Make sure that in the beginning of your code you adjust the environment such that the src folder is known. If you create your code in the analyses folder, then you have to go up two levels to reach the source folder, so you use the following code. 
 
