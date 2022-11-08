@@ -58,9 +58,27 @@ The latter will output the files and folders which are located at your current p
 filepath_drive = "/content/drive/.shortcut-targets-by-id/something/some_folder"
 ```
 
-Next, you navigate to your drive and clone this repository with the instructions provided on Github. You can use this [Medium article](https://medium.com/@ashwindesilva/how-to-use-google-colaboratory-to-clone-a-github-repository-e07cf8d3d22b) as reference. Navigate to the repository and verify that you are on the right branch with
+Next, you navigate to your drive and clone this repository with the instructions provided on Github. You can use this [Medium article](https://medium.com/@ashwindesilva/how-to-use-google-colaboratory-to-clone-a-github-repository-e07cf8d3d22b) and this [Medium article](https://medium.com/analytics-vidhya/how-to-use-google-colab-with-github-via-google-drive-68efb23a42d) as reference. Read them carefully. Here we just describe the most important steps:
+
+Clone the repo with. 
+```python
+!git clone "https://github.com/romanwixinger/data-engineering-utokyo"
+```
+
+Navigate to the repository in the notebook and verify that you are on the right branch with
 ```python
 !git status
+```
+This should output that you are on the branch main. Last, we have to configure origin such that we can push to Github. So go to Github -> settings -> Developer settings -> Personal access tokens and create a personal access token for the repository. Store the access token safely, you cannot see it afterwards. Then you add the remote origin
+
+```python
+!git remote add <remote-name> https://{git_username}:{git_token}@github.com/{username}/{repository}.git
+```
+
+Use origin as remote-name, romanwixinger as username, data-engineering-utokyo as repository and your git_username and git_token. To verify that it worked, check that the following command outputs two lines: 
+
+```python
+!git remote -v
 ```
 
 Now you can start to import functionality from the package as described in the examples. 
