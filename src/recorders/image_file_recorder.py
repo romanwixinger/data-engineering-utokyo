@@ -53,12 +53,14 @@ class ImageFileRecorder(Recorder):
 
         # Get the folder paths which contain the desired files
         folders = PathHelper.get_folders(folder=self.filepath, match=self.match)
+        print(folders)
+
         
         # Create a list of tuples (filepath, timestamp, ROI Sum,Coil (1:ON 0:OFF)) using the metadata
         for folder in folders: 
             
             # Create metadata lookup
-            metadata_filepath = folder + "\\all_data.csv"
+            metadata_filepath = os.path.join(folder, "all_data.csv")
             assert os.path.isfile(metadata_filepath), f"Expected metadata file at {metadata_filepath}, but did not find it."
             metadata_df = Recorder(filepath=metadata_filepath,
                                    has_metadata=False).get_table()
@@ -87,7 +89,6 @@ class ImageFileRecorder(Recorder):
     def _harmonize_time(self): 
         self._table_df["timestamp"] = self._table_df["Time"].apply(pd.Timestamp).values.astype(np.int64)
         self._table_df["datetime"] =  self._table_df["Time"].apply(pd.Timestamp)
-        
         
     def _filepath_to_nr(self, fp: str): 
         """ Takes something of the form "...cmos_000043.csv" and returns 43."""

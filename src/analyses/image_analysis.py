@@ -35,6 +35,17 @@ class ImageAnalysis(Analysis):
         self.perform_analysis = perform_analysis
         self.time_interval = time_interval
         self.min_signal = min_signal
+        self.was_run_before = False
+        
+    def is_up_to_date(self): 
+        """ In the beginning, the recorder might be up-to-date, but the
+            analysis was not run yet.
+        """
+        return all((
+            self.was_run_before,
+            self.recorder.is_up_to_date(),
+            self.last_updated == self.recorder.last_updated
+            ))
         
     def _query_df(self, df: pd.DataFrame) -> pd.DataFrame(): 
             """ Narrows down the rows to the one in the time interval. 
@@ -56,8 +67,13 @@ class ImageAnalysis(Analysis):
         for i, row in df.iterrows(): 
             source = row["filepath"]
             filename = row["filename"]
+            time = str(row["datetime"])
             target = self.image_src + filename + self.image_extension
-            statistics = self.perform_analysis(source=source, target=target, mode="mot number", min_signal=self.min_signal)
+            statistics = self.perform_analysis(source=source, 
+                                               target=target, 
+                                               mode="mot number", 
+                                               min_signal=self.min_signal, 
+                                               time=time)
             statistics_list.append(statistics)
             
         # Enrich dataframe with results
@@ -65,6 +81,7 @@ class ImageAnalysis(Analysis):
         
         # Save the result
         self._save_results(enriched_df)
+        self.was_run_before = True
         return enriched_df
     
     def _enrich_df_with_statistics(self, df: pd.DataFrame, statistics_list: list) -> pd.DataFrame: 
@@ -75,7 +92,7 @@ class ImageAnalysis(Analysis):
         columns = list(df.columns) 
         new_columns = ["A", "A_unc", "sigma_x", "sigma_x_unc", "sigma_y", 
                        "sigma_y_unc", "mu_x", "mu_x_unc", "mu_y", "mu_y_unc", 
-                       "C", "C_unc", "X-squared", "p-value", "R^2"]
+                       "C", "C_unc", "X-squared", "p-value", "R^2", "signal_sum"]
         enriched_rows = [list(row) + [(stat[col] if stat["fit_successful"] else None) for col in new_columns] + [stat["fit_successful"]]\
                          for (i, row), stat in zip(df.iterrows(), statistics_list)]
         return pd.DataFrame(data=enriched_rows, columns=columns + new_columns + ["fit_successful"])
@@ -83,7 +100,7 @@ class ImageAnalysis(Analysis):
     
 if __name__=="__main__": 
     
-    from constants.mot_constants import c_ccd
+    from src.constants.mot_constants import c_ccd
     perform_analysis = MOTMLE(c=c_ccd, 
                               references=[], 
                               do_subtract_dead_pixels=False).perform_analysis
