@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Sep 13 16:35:17 2022
+"""Keeps track of the available files with a specific filename format.
 
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Keeps track of the available files. Use cases include the image data from the 
-CMOS camera and the SSD data. 
+Use cases include the image data from the CMOS camera and the SSD data. 
 """
 
 import sys
@@ -21,6 +17,22 @@ from src.analyses.path_helper import PathHelper
 
 
 class FileRecorder(Recorder): 
+    """Tracks the filenames which match a format in a specific folder.
+        
+    Args:
+        filepath (str): Path to the folder in which the files are stored.
+        always_update (bool): Should the recorder always check for new data.
+        match (str): Regex with which the filenames are compared. Only matching
+            strings are tracked.
+
+    Attributes:
+        filepath (str): Path to the folder in which the files are stored.
+        always_update (bool): Should the recorder always check for new data.
+        match (str): Regex with which the filenames are compared. Only matching
+            strings are tracked.
+        filepath_set (set): Set of filepaths that were found.
+    """
+    
     
     def __init__(self, filepath: str, always_update: bool=False, match: str=""):
         super(FileRecorder, self).__init__(
@@ -32,12 +44,18 @@ class FileRecorder(Recorder):
         self.filepath_set = set()
 
     def _load_initial_data(self) -> pd.DataFrame: 
-        """ Returns all data (filepath and metadata of images) which are new. 
+        """Gets all data (filepath and metadata of images).
+        
+        Returns: 
+            Data as a pandas dataframe.
         """
         return self._load_new_data()
         
     def _load_new_data(self) -> pd.DataFrame: 
-        """ Returns all data (filepath and metadata of images) which are new. 
+        """Gets all data (filepath and metadata of images) which are new. 
+        
+        Returns: 
+            New data as a pandas dataframe.
         """
 
         # Generate filepaths and add them to loaded
@@ -61,27 +79,54 @@ class FileRecorder(Recorder):
         return pd.DataFrame(data=rows, columns=columns)
     
     def _load_metadata(self) -> pd.DataFrame: 
-        """ Reloads all metadata. 
+        """Reloads all metadata. 
+        
+        Returns: 
+            Empty dataframe. There is no metadata.
         """
         return pd.DataFrame()
     
-    def _harmonize_time(self): 
+    def _harmonize_time(self):
+        """Reads the time and adds it to the table.
+        """
         self._table_df["timestamp"] = self._table_df["ctime"].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S.%f'))
         self._table_df["datetime"] =  self._table_df["timestamp"].apply(pd.Timestamp)
        
         
 class FileParser(FileRecorder):
-    """ Like the ImageRecorder but on each evaluation of get_table(), 
-        the parser forgets the old data and just returns the new one. 
+    """Works like the FileRecorder, but just returns new data each time.
+    
+    Note: 
+        The parser forgets the old data and just returns the new one. It is 
+        convenient when we want to laod many files in chunks. We can just call
+        the FileParser multiple times, and each time it tells us which files
+        we should load.
+        
+    Args:
+        filepath (str): Path to the folder in which the files are stored.
+        always_update (bool): Should the recorder always check for new data.
+        match (str): Regex with which the filenames are compared. Only matching
+            strings are tracked.
+
+    Attributes:
+        filepath (str): Path to the folder in which the files are stored.
+        always_update (bool): Should the recorder always check for new data.
+        match (str): Regex with which the filenames are compared. Only matching
+            strings are tracked.
+        filepath_set (set): Set of filepaths that were found.
     """
     
     def _update_data(self):
+        """Loads new data.
+        """
         new_data_df = self._load_new_data()
         self.read_data_lines += len(new_data_df.index)
         self._data_df = new_data_df
         self.last_updated = self._get_mod_time()
         
     def is_up_to_date(self) -> bool:
+        """Returns whether all data has already been returned.
+        """
         all_filepaths = PathHelper.get_filepaths(folder=self.filepath, match=self.match)
         return len(self.filepath_set) == len(all_filepaths) 
 
