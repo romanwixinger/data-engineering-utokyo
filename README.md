@@ -14,12 +14,12 @@ The recorders also come in a flavor that we call parser. Parsers provide a solut
 ## Impressions
 The plot and histogram are visualizations of the SSD data. The peaks and the background are fitted with an algorithm. <br> 
 
-<img src="impressions\SSD_Peak_Overview_Plot.png" alt="SSD Overview"  height="210"/>
-<img src="impressions\SSD_Peak_Histogram.png" alt="SSD Histogram" width="300" height="210"/>
+<img src="impressions\SSDPeaks.png" alt="SSD Overview"  height="210"/>
+<img src="impressions\SSDSinglePeak.png" alt="SSD Histogram" width="300" height="210"/>
 <br>
 
 This 2D plot is obtained by Maximum Likelihood Estimation with a Gaussian model on an image from the CCD camera. <br>
-<img src="impressions\CCD_2D_Gaussian.png" alt="2D Gaussian fit from CCD camera image" width="288"/>
+<img src="impressions\CCD2DGaussian.png" alt="2D Gaussian fit from CCD camera image" width="288"/>
 
 ## How to get started
 There are two environments in which this package has been tested: 
