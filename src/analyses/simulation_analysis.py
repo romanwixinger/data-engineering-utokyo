@@ -18,4 +18,4 @@ from src.analyses.analysis import Analysis
 
 
 class SimulationAnalysis(Analysis): 
-    
+    pass

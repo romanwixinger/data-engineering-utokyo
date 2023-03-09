@@ -1,5 +1,5 @@
 Welcome to Data Engineering UTokyo's documentation!
-===========================================
+===================================================
 
 .. toctree::
    :maxdepth: 3
@@ -36,17 +36,7 @@ Welcome to Data Engineering UTokyo's documentation!
    :maxdepth: 2
    :caption: Constants
 
-   constantss
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   constants
 
 
 How to contribute
