@@ -28,7 +28,8 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.todo"
+    "sphinx.ext.todo",
+    "sphinx.ext.linkcode"
 ]
 
 autosummary_generate = True
@@ -61,3 +62,12 @@ html_static_path = ['_static']
     'typing': ('https://docs.python.org/3/library/typing.html', None),
     'pandas': ('https://pandas.pydata.org/', None)
 }
+
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    if not info['module']:
+        return None
+    filename = info['module'].replace('.', '/')
+    return "https://github.com/romanwixinger/data-engineering-utokyo/tree/main/%s.py" % filename
