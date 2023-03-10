@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Sep 17 20:14:22 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
+"""Combines all results of a cycle.
 
 The CycleRecorder combines all results of a cycle, namely 
 
@@ -12,6 +9,9 @@ The CycleRecorder combines all results of a cycle, namely
 
 The recorder can then by used in the CycleAnalysis, which allows us to explore
 dependencies of the MOT number. 
+
+Todo: 
+    * Implement the CycleRecorder.
 """
 
 import sys
@@ -24,6 +24,7 @@ from src.recorders.result_recorder import Recorder, SSDResultsRecorder, ImageRes
 class CycleRecorder(Recorder): 
     """ Tracks all results and combines them into one dataframe. 
     """ 
+    pass
     
     
 

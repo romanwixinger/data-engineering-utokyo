@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Sep  6 11:09:40 2022
-
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Gauge Recorder. 
+"""Tracks the Rb dispenser and the neutralizer current.
 """
 
 import sys
@@ -18,6 +12,8 @@ from src.recorders.recorder import Recorder
 
 
 class GaugeRecorder(Recorder): 
+    """Tracks the Rb dispenser and the neutralizer current.
+    """
     
     def __init__(self, filepath: str, always_update: bool=False):
         super(GaugeRecorder, self).__init__(
