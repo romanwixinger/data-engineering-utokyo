@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Sep  9 16:37:36 2022
-
-@author: Shintaro Nagase (nagase@cns.s.u-tokyo.ac.jp) 
-@co-author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Extraction of the MOT number and power from SSD images. 
+"""Fitting procedure for extracting the MOT number from a CMOS image.
 
 Takes dataframes with image data and some references dataframes from the 
 same camera with just noise. Estimates the dead pixels and subtracts them
@@ -32,6 +26,22 @@ from src.constants.mot_constants import c_ccd
 
 
 class MOTMLE():
+    """Applies Maximum Likelihood Estimation to extract the MOT number from an image.
+
+    Args:
+         c: Lookup for the constants
+         references (list[str]): List of files (images) which are to be used as reference for subtracting dead pixels.
+         do_subtract_dead_pixels (bool): Should we guess and subtract the dead pixels before the fitting and plotting.
+         dead_pixels_percentile (float): Guess of the fraction of dead pixels in the image.
+
+    Attributes:
+        c: Lookup for the constants
+        references (list[str]): List of files (images) which are to be used as reference for subtracting dead pixels.
+        do_subtract_dead_pixels (bool): Should we guess and subtract the dead pixels before the fitting and plotting.
+        dead_pixels_percentile (float): Guess of the fraction of dead pixels in the image.
+        self.dead_pixels (np.array): Array with the dead pixels and their mean value.
+        self.dead_pixel_sum (int): Sum of the values of the dead pixels.
+    """
     
     def __init__(self, c, references: list, do_subtract_dead_pixels: bool=True, dead_pixel_percentile: float=100.0/20): 
         # Settings
@@ -49,13 +59,24 @@ class MOTMLE():
             assert len(self.references) >= self.min_nr_of_references, f"MOTMLE needs at least {self.min_nr_of_references} reference images."
         
     def perform_analysis(self, source: str, target: str, mode: str, min_signal: int=0, time: str="unknown time"): 
-        """ Loads the image data, fits a 2D gaussian model on it, generates a plot
-            of the original data and a fit, saves the plot, and returns the 
-            statistics of the fit. 
-            Source is the filepath of the original data and target is the filepath 
-            of the plot. The mode can be either 'power' or 'mot number'. 
-            If the total sum of the df is less than min_signal, then we 
-            terminate the analysis. 
+        """Executes the fitting for a single image.
+
+        Loads the image data, fits a 2D gaussian model on it, generates a plot of the original data and a fit, saves the
+        plot, and returns the statistics of the fit.
+
+        Source is the filepath of the original data and target is the filepath of the plot. The mode can be either
+        'power' or 'mot number'. If the total sum of the df is less than min_signal, then we terminate the analysis.
+
+        Args:
+            source (str): Filepath of the image file.
+            target (str): Filepath of the plot we want to create.
+            mode (str): Either 'power' or 'mot number', depending on what observable we want to fit.
+            min_signal (int): Threshold, when the sum of the image is less than this, then we skip the image.
+            time (str): Time at which the image was taken, will be added to the plot.
+
+        Returns:
+            statistics (dict): Lookup of the results. Contains at least the keys "fit_successful", "total_sum",
+                "enough_pulses", and more when the fit is successful.
         """
         
         # Load data
@@ -96,7 +117,14 @@ class MOTMLE():
         return statistics
 
     def _load(self, source: str) -> pd.DataFrame: 
-        """ Load the pandas dataframe and the right constants. """
+        """Load the pandas dataframe and the right constants.
+
+        Args:
+            source (str): Filepath to image.
+
+        Returns:
+            The image as pandas dataframe.
+        """
         if ".xlsx" in source: 
             df = pd.read_excel(source, index_col=None, header=None)
         else: 
@@ -104,26 +132,33 @@ class MOTMLE():
         return df
     
     def _df_to_array(self, df: pd.DataFrame) -> np.array: 
-        """ Takes the image as df and returns it as np.array. 
+        """Takes the image as df, cuts it to the interesting parts, and returns it as np.array.
+
+        Args:
+            df (pd.DataFrame): The dataframe representing the image.
+
+        Returns:
+            Interesting part of the image as np.array.
         """
         return df\
             .iloc[self.c.Ymin:self.c.Ymax, self.c.Xmin:self.c.Xmax]\
             .to_numpy()\
             .reshape(-1)
         
-    def _precalculate_dead_pixels(self) -> np.array: 
-        """ Takes a list of reference images, and finds the dead pixels by
-            calculating the ratio standard deviation / max(average, 1) of the 
-            same pixel across the reference images. The dead pixels are the ones 
-            with the lowest std. 
-            Sets the member variables that are later used in the method
-            _subtract_dead_pixels(). 
-            
-            Assumptions: 
-            - Dead pixels have high median
-            
-            So dead pixels are the ones with the smallest ratio
-            1 / max(median, 1)
+    def _precalculate_dead_pixels(self):
+        """Calculates a heuristic for finding the dead pixels.
+
+        Takes a list of reference images, and finds the dead pixels by calculating the
+        ratio standard deviation / max(average, 1) of the same pixel across the reference images. The dead pixels are
+        the ones with the lowest std. Sets the member variables that are later used in the method _subtract_dead_pixels().
+
+        The assumption is that dead pixels have high median of this value. So dead pixels are the ones with the smallest
+        ratio 1 / max(median, 1).
+
+        Stores the array that represents the mean value that the dead pixels have, with the healthy pixels set to zero.
+
+        Todo:
+            * Check this procedure, and whether it is correctly documented.
         """
         # Load 
         dfs = [self._load(source) for source in self.references]
@@ -156,8 +191,13 @@ class MOTMLE():
         return 
     
     def _plot_dead_pixels(self, signal_mean, ratio, signal_std, dead_pixels): 
-        """ Create heatmaps of the signal mean, ratio, std and estimated
-            dead pixels. 
+        """Create heatmaps of the signal mean, ratio, std and estimated dead pixels.
+
+        Args:
+            signal_mean (np.array): Mean calculated signal as given by _precalculate_dead_pixels() method.
+            ratio (np.array): See _precalculate_dead_pixels() method.
+            signal_std (np.array): See _precalculate_dead_pixels() method.
+            dead_pixels (np.array): See _precalculate_dead_pixels() method.
         """
         arrays = [signal_mean.reshape((self.c.Ynum, self.c.Xnum)),
                   ratio.reshape((self.c.Ynum, self.c.Xnum)),
@@ -180,8 +220,13 @@ class MOTMLE():
         return
     
     def _subtract_dead_pixels(self, data: dict): 
-        """ Subtracts the values of the dead pixels from the z-values of the 
-            data. Replaces the value with 0 if they become negative. 
+        """Subtracts the values of the dead pixels from the z-values of the data.
+
+        Replaces the value with 0 if they become negative. Modifies the argument of the method, as dicts are passed by
+        reference.
+
+        Args:
+            data (dict): Lookup of the data with keys x, y, z and arrays are values.
         """
     
         print("Array before subtraction: ", data["z"], "with sum", np.sum(data["z"]))
@@ -191,9 +236,17 @@ class MOTMLE():
         print("Array after subtraction: ", data["z"], "with sum", np.sum(data["z"]))
         return
         
-    def _preprocess(self, df: pd.DataFrame, mode: str): 
-        """ Takes the ssd image data as pandas dataframe and converts into 
-            numpy arrays. Converts the unit of the z-axis. 
+    def _preprocess(self, df: pd.DataFrame, mode: str) -> dict:
+        """Takes the image data as pandas dataframe and converts into numpy arrays. Converts the unit of the z-axis.
+
+        The conversion of the z axis is based on the setup constants and the mode.
+
+        Args:
+            df (pd.DataFrame): The dataframe representing the image.
+            mode (str): Either 'power' or 'mot number', depending on what observable we want to fit.
+
+        Returns:
+            Lookup representing the data with keys x, y, and z. Values are np.arrays.
         """
         
         # Create x, y
@@ -210,9 +263,13 @@ class MOTMLE():
         return data
     
     def _get_scaling_factor(self, mode: str) -> float: 
-        """ The unit of the z axis can be converted using a scaling factor. This 
-            function returns the scaling factor, which can be determined from the
-            mode, which is either 'power' or 'mot number'. 
+        """ Loads a physical scaling parameter depending on the mode.
+
+        The unit of the z axis can be converted using a scaling factor. This function returns the scaling factor, which
+        can be determined from the mode, which is either 'power' or 'mot number'.
+
+        Returns:
+            The scaling factor as float.
         """
         scaling_factor = {
             "mot number": 1.0 / self.c.Pow_elec_coef / self.c.MOTnum_Pow_coef, 
@@ -221,7 +278,16 @@ class MOTMLE():
         return scaling_factor
     
     def _fitting(self, model: callable, data: dict, mode: str):
-        """ Fit the model to the data."""
+        """Fits the model to the data.
+
+        Args:
+            model (callable): Model to be fitted.
+            data (dict): Lookup of the data.
+            mode (str): Either 'power' or 'mot number'. Changes the initial guess of the fitting procedure.
+
+        Returns:
+            Lookup with the statistics of the fit.
+        """
     
         # Extraction
         x, y, z = data["x"], data["y"], data["z"]
@@ -255,7 +321,17 @@ class MOTMLE():
         # Return statistics
         return self._extract_statistics(r_squared, chi2, popt, pcov, perr, signal_sum)
     
-    def _extract_statistics(self, r_squared, chi2, popt, pcov, perr, signal_sum): 
+    def _extract_statistics(self, r_squared, chi2, popt, pcov, perr, signal_sum):
+        """Convert the fit results to a convenient lookup.
+
+        Args:
+             r_squared
+             chi2
+             popt (np.array): Optimal parameters.
+             pcov (np.array): Covariance matrix of the optimal fit parameters. Used to get the uncertainty of the fit.
+             perr
+             signal_sum: Sum of the array to be fitted.
+        """
         return {
             "A": popt[0],
             "A_unc": perr[0],
@@ -281,7 +357,11 @@ class MOTMLE():
             }
         
     def _get_initial_guess(self, data: dict, mode: str): 
-        """ Proposes initial guesses for the fitting parameters with heuristics. 
+        """Proposes the initial guesses for the fitting parameters with heuristics.
+
+        Args:
+            data (dict): Data as lookup table.
+            mode (str): Either 'power' or 'mot number'. Changes the initial guess of the fitting procedure.
         """
         x, y, z = data["x"], data["y"], data["z"] 
         
@@ -308,8 +388,18 @@ class MOTMLE():
         return p0
         
     def _generate_fit_data(self, model: callable, data: dict, statistics: dict): 
-        """ Takes the x, y values of the data and the fit parameter, and returns
-            fitted z values on a x, y grid in the same format as the data. 
+        """Takes the x, y values of the data and the fit parameter, and returns fitted z values.
+
+         Does this on a x, y grid in the same format as the data.
+
+         Args:
+            model (callable): Model to be fitted.
+            data (dict): Lookup of the data.
+            statistics (dict): Lookup of the statistics of the fit result.
+
+        Returns:
+            Fit data as lookup in the same format as the original data. Has three keys x, y, z, corresponding to the
+            coordinate x, y, and the fitted z value, respectively.
         """
         # Extract fit parameters
         popt = statistics["popt"]
@@ -328,7 +418,14 @@ class MOTMLE():
         return fit_data
     
     def _plot_fit_result(self, data: dict, fit_data: dict, target: str, mode: str, time: str):
-        """ Plots the 3d data and the fit. Saves the image to the url. 
+        """Plots the 3d data and the fit. Saves the image to the url.
+
+        Args:
+            data (dict): Original data.
+            fit_data (dict): Fitted data.
+            target (str): Filename of the plot which is to be created and saved.
+            mode (str): Either 'power' or 'mot number'. Changes the initial guess of the fitting procedure.
+            time (str): Time when the image was taken. Is added to the title of the plot.
         """
         # Setup figure
         fig = plt.figure()
@@ -360,9 +457,17 @@ class MOTMLE():
         # Save image
         plt.savefig(target, dpi=300)
         plt.show(block=False)
+        return
         
     def _plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str):
-        """ Plots the 3d data and the fit. Saves the image to the url. 
+        """Plots the 3d data and the fit as heatmap. Saves the image to the url.
+
+        Args:
+            data (dict): Original data.
+            fit_data (dict): Fitted data.
+            target (str): Filename of the plot which is to be created and saved.
+            mode (str): Either 'power' or 'mot number'. Changes the initial guess of the fitting procedure.
+            time (str): Time when the image was taken. Is added to the title of the plot.
         """
         
         # Setup figure
@@ -391,9 +496,15 @@ class MOTMLE():
                 ax.set_title(title)
     
         plt.savefig(target, dpi=300)
-        plt.show()   
+        plt.show()
+        return
     
     def _print_stats(self, statistics: dict):
+        """Prints the fit statistics.
+
+        Args:
+            statistics (dict): Statistics of the fit result.
+        """
         if not statistics["fit_successful"]: 
             print(" Result ***********")
             print("Fit was not succesful.")
@@ -412,9 +523,10 @@ class MOTMLE():
         print("p-value = ", statistics["p-value"])
         print("R^2 = ", statistics["R^2"])
         print("*******************")
+        return
         
 
-if __name__=="__main__":
+if __name__ == "__main__":
     
     mot_mle = MOTMLE(c=c_ccd, references=[], do_subtract_dead_pixels=False)
     perform_analysis = mot_mle.perform_analysis
