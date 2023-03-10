@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
+"""Simulation analysis.
+
+Todo:
+    * Find out what it should do.
+    * Implement it when it makes sense.
 """
-Created on Thu Sep  8 11:31:17 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Simulation analysis. 
-"""
-
 
 import sys
 sys.path.insert(0,'../..')  # Set src as top-level

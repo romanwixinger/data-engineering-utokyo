@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Sep 13 12:32:22 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Finds peaks in the SSD pulse data. 
+"""Finds peaks in the SSD pulse data.
 """
 
 import sys

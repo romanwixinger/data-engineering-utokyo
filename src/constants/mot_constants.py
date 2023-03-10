@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Sep  9 16:53:11 2022
+"""MOT constants for the old CCD camera and for the new CMOS camera.
 
-@author: Shintaro Nagase (nagase@cns.s.u-tokyo.ac.jp) 
-@co-author: Roman Wixinger (roman.wixinger@gmail.com)
-
-MOT constants for the old CCD camera and for the new CMOS camera. We store the 
-constants in dicts. 
+We store the constants in dicts.
 """
 
 import numpy as np

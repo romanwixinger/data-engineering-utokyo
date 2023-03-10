@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 18 14:30:58 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Test for creating folders. 
+""" Functionality for creating folders.
 """
 
 import os

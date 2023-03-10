@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Sep 13 12:36:16 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Analyses the half-life time of the peaks in the SSD pulse data and
-plots the region around the peaks as histogram. 
+"""Analyses the half-life time of the peaks in the SSD pulse data and plots the region around the peaks as histogram.
 """
 
 
@@ -24,14 +18,27 @@ plt.rcParams.update(plotting_params)
 
 
 class Peak(object): 
-    """ Class for storing peaks of the SSD data and doing some data analysis
-        on them. 
+    """Represents a peak of the SSD data and can perform analysis on itself.
+
+    Args:
+        timestamp (int): Time of the peak.
+        events (list): List of pulses making up the peak.
+        background (float): Pulse rate [1/s] representing the background.
+
+    Attributes:
+        timestamp (int): Time of the peak.
+        events (list): List of pulses making up the peak.
+        background (float): Pulse rate [1/s] representing the background.
+        pulses (int): Number of pulses making up the peak.
+        pulses_background (int): Expected number of background pulses in the time interval provided by the events.
+        pulses_peak (int): Excess of pulses. How many more pulses do we see as expected by the background.
+        half_life_time (int): Estimated half-life time as given in ns.
     """
     
     def __init__(self, timestamp: int, events: list, background: float):
         self.timestamp = timestamp      # [ns]
         self.events = events            # list(ns)
-        self.pulses =  len(self.events) # [1]
+        self.pulses = len(self.events)  # [1]
         self.background = background    # Rate [1/ns]
         self.pulses_background = self.background * (max(self.events) - min(self.events))   # [1]
         self.pulses_peak = self.pulses - self.pulses_background                            # [1]      
@@ -39,9 +46,10 @@ class Peak(object):
         self.estimate()
     
     def estimate(self): 
-        """ Calculates the half-life time. The result can be derived with MLE
-            by adapting the reasoning from here: 
-            https://math.stackexchange.com/questions/101481/calculating-maximum-likelihood-estimation-of-the-exponential-distribution-and-pr
+        """Calculates the half-life time with MLE.
+
+        The result can be derived with MLE by adapting the reasoning from here:
+        https://math.stackexchange.com/questions/101481/calculating-maximum-likelihood-estimation-of-the-exponential-distribution-and-pr
         """
         # Query pulses after peak
         after_peak_events = [ts for ts in self.events if ts >= self.timestamp]
@@ -68,7 +76,10 @@ class Peak(object):
         return
     
     def plot(self, url: str):
-        """ Visualizes the data and fit and saves the image to the url. 
+        """Visualizes the data and fit and saves the image to the url.
+
+        Args:
+            url (str): Name of the file to which the plot should be saved.
         """
         
         # Convert unit
@@ -115,14 +126,22 @@ class Peak(object):
 
         return 
     
-    def _ts_ns_to_timestamp(self, ts_list: list): 
+    def _ts_ns_to_timestamp(self, ts_list: list):
+        """Takes a list of timestamps in ns and returns a list of datetimes.
+
+        Args:
+            ts_List (list[int]): List of timestamps in ns.
+
+        Returns:
+            A list of timestamps.
+        """
         if type(ts_list) == int: 
             ts = ts_list
             return dt.datetime.fromtimestamp(ts / 1000000000)
         return [dt.datetime.fromtimestamp(ts / 1000000000) for ts in ts_list]
 
     def as_dataframe(self) -> pd.DataFrame:
-        """ Return the pulse as pandas dataframe. 
+        """Return the pulse as pandas dataframe.
         """
         dic = self.__dict__()
         columns = dic.keys()
@@ -130,9 +149,9 @@ class Peak(object):
         return pd.DataFrame(data=[values], columns=columns)
     
     def __dict__(self): 
-        """ Dict representation of a peak. 
+        """Dict representation of a peak.
         """
-        
+
         return {
             "timestamp_ns": self.timestamp,
             "pulses_peak": self.pulses_peak, 
@@ -140,6 +159,3 @@ class Peak(object):
             "half_life_time": self.half_life_time, 
             "background": self.background
             }
-    
-    
-    

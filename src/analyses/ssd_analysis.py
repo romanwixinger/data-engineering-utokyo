@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  7 09:42:32 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-SSD Analysis -> Visualizes the pulses and peaks in the pulses. 
+"""SSD Analysis -> Visualizes the pulses and peaks in the pulses.
 
 Note: The SSDAnalysis works with the SSDParser instead of the usual SSDRecorder,
 which means that each time we perform ssd_analysis.run(), only the next 
@@ -157,7 +152,8 @@ class SSDAnalysis(Analysis):
     
     
 class SSDAnalysisWrapper(object):
-    """
+    """Wrapper for the SSD Analysis.
+
     Solves the problem that we have many ssd csv file and not just one. 
     Keeps track of the csv files that match a certain pattern in a certain 
     timespan and applies the SSDAnalysis on them 1 by 1. 

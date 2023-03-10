@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Analysis for creating SSD Histograms
-
 """
 
 import sys

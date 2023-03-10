@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Sep  5 17:13:32 2022
+"""File for global constants.
 
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-File for global constants. Create an instance with you settings here. Then 
-assign this instance to loc, such that your other scripts use your settings. 
+Create an instance with you settings here. Then assign this instance to loc, such that your other scripts use your
+settings.
 """
 
 class Locations(): 

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  7 13:46:16 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Runner for a collection of Analyses. 
+"""Runner for a collection of Analyses.
 """
 
 import sys

@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  7 12:19:39 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-PMT Analysis. 
+"""PMT Analysis.
 """
 
 
