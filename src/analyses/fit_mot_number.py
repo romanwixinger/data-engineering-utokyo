@@ -11,10 +11,8 @@ Sources:
 """
 
 import sys
-sys.path.insert(0,'../..')  # Set src as top-level
+sys.path.insert(0, '../..')  # Set src as top-level
 
-import os
-from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
