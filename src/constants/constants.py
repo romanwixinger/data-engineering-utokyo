@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-"""File for global constants.
+"""File for saving the filepaths of different sources.
 
 Create an instance with you settings here. Then assign this instance to loc, such that your other scripts use your
 settings.
+
+Todo:
+    * Check if this is still in use somewhere.
 """
 
-class Locations(): 
+class Locations(object):
+    """Represents the filepaths to all data sources.
+    """
     
     def __init__(self, 
                  location: str="",

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """MOT constants for the old CCD camera and for the new CMOS camera.
 
-We store the constants in dicts.
+We store the constants in dicts. Note that the region of interest (ROI) can change quite a lot, even during a beamtime.
+This is an unsolved problem.
+
+Todo:
+    * Check that the constants are set correctly.
+    * Solve the problem with the region of interest. Maybe it can be detected automatically.
 """
 
 import numpy as np
 
 
-""" Class """ 
-
-class CameraConstants(): 
+class CameraConstants(object):
     
     def __init__(self,
                  Cell_xsize: float,
@@ -218,5 +221,3 @@ c_cmos_laser_room = CameraConstants(
     Ymin=300, 
     Ymax=400
     )
-
-
