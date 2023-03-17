@@ -13,20 +13,27 @@ import numpy as np
 
 
 class CameraConstants(object):
+    """ Stores the constants of the setup related to the CMOS camera.
+    """
+
+    # Universal constants
+    hbar = 1.054571817 * 10**(-34)     # Planck constant (Js)
+    c = 299792458                      # Speed of light (m/s)
+
+    # Atom
+    lambda_Rb = 780 * 1e-9              # Fluorescence wavelength (m)
+    omega0_Rb = 2*np.pi * 299792458
+    Gamma_Rb = 2*np.pi * 7.6 * 1e6      # Life span (Hz)
+    I_sat = 3.5771                      # Saturation strength (mW/cm^2)
     
     def __init__(self,
                  Cell_xsize: float,
                  Cell_ysize: float, 
                  T_exp: float,
-                 eta: float, 
-                 b: float, 
+                 eta: float,
                  x_power: float,
                  y_power: float, 
                  z_power: float,
-                 beam_diam: float,
-                 delta: float,
-                 VP_area: float,
-                 r_VP: float,
                  two_D_gauss: callable,
                  pulse_per_coulomb: float,
                  Gain: float,
@@ -34,17 +41,9 @@ class CameraConstants(object):
                  Xmin: int,
                  Xmax: int,
                  Ymin: int, 
-                 Ymax: int): 
-        # Universal constants
-        self.hbar = 1.054571817 * 10**(-34)     # Planck constant (Js)
-        self.c = 299792458                      # Speed of light (m/s)
-        
-        # Atom
-        self.lambda_Rb = 780 * 10**(-9)         # Fluorescence wavelength (m)
-        self.omega0_Rb = 2*np.pi*self.c
-        self.Gamma_Rb = 2*np.pi * 7.6 * 10**(6) # Life span (Hz)
-        self.I_sat = 3.5771                     # Saturation strength (mW/cm^2)
-        
+                 Ymax: int):
+
+        # Cell
         self.Cell_xsize = Cell_xsize            # CCD Cell x size (m)
         self.Cell_ysize = Cell_ysize            # CCD Cell y size (m)
         self.T_exp = T_exp                      # Exposure time
@@ -124,25 +123,20 @@ def two_D_gauss(X: tuple,
 c_ccd = CameraConstants(
     Cell_xsize=6.45 * 10**(-6),
     Cell_ysize=6.45 * 10**(-6), 
-    T_exp = 50 * 10**(-6),
-    eta = 0.5,
-    b = 10/5.3277,
+    T_exp=50 * 10**(-6),
+    eta=0.5,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    beam_diam=1.7, 
-    delta=2*np.pi * 10 * 10**(6),  
-    VP_area=8**2 * np.pi, 
-    r_VP=65,
     two_D_gauss=two_D_gauss,
-    pulse_per_coulomb=10^-6,
+    pulse_per_coulomb=1e-6,
     Gain=1.0,
-    beta_cathode = 63.0 / 1000,
+    beta_cathode=63.0 / 1000,
     Xmin=480,
     Xmax=560,
     Ymin=630, 
     Ymax=810
-    )
+)
 
 
 # CMOS for beamtime (20220918)
@@ -152,23 +146,18 @@ c_cmos_Rb_20220918 = CameraConstants(
     Cell_ysize=3.45 * 10**(-6), 
     T_exp=50 * 10**(-6),
     eta=0.3,
-    b=10/5.3277,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    beam_diam=1.7, 
-    delta=2*np.pi * 10 * 10**(6),  
-    VP_area=8**2 * np.pi, 
-    r_VP=65,
     two_D_gauss=two_D_gauss,
-    pulse_per_coulomb=10^-6,
+    pulse_per_coulomb=1e-6,
     Gain=1.0,
-    beta_cathode = 63.0 / 1000,
+    beta_cathode=63.0 / 1000,
     Xmin=175,
     Xmax=232,
     Ymin=233, 
     Ymax=290
-    )
+)
 
 # CMOS for beamtime (20220918)
 # TODO: Check constants like VP_area and r_VP
@@ -177,23 +166,18 @@ c_cmos_Fr_20220918 = CameraConstants(
     Cell_ysize=3.45 * 10**(-6), 
     T_exp=50 * 10**(-6),
     eta=0.46,
-    b=10/5.3277,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    beam_diam=1.7, 
-    delta=2*np.pi * 10 * 10**(6),  
-    VP_area=8**2 * np.pi, 
-    r_VP=65,
     two_D_gauss=two_D_gauss,
-    pulse_per_coulomb=10^-6,
+    pulse_per_coulomb=10e-6,
     Gain=1.0,
-    beta_cathode = 63.0 / 1000,
+    beta_cathode=63.0 / 1000,
     Xmin=175,
     Xmax=232,
     Ymin=233, 
     Ymax=290
-    )
+)
 
 
 
@@ -204,20 +188,15 @@ c_cmos_laser_room = CameraConstants(
     Cell_ysize=3.45 * 10**(-6), 
     T_exp = 50 * 10**(-6),
     eta = 0.3,
-    b = 10/5.3277,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    beam_diam=1.7, 
-    delta=2*np.pi * 10 * 10**(6),  
-    VP_area=8**2 * np.pi, 
-    r_VP=65,
     two_D_gauss=two_D_gauss,
-    pulse_per_coulomb=10^-6,
+    pulse_per_coulomb=1e-6,
     Gain=1.0,
-    beta_cathode = 63.0 / 1000,
+    beta_cathode=63.0 / 1000,
     Xmin=850,
     Xmax=950,
     Ymin=300, 
     Ymax=400
-    )
+)
