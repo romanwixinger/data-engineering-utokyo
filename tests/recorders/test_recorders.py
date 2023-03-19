@@ -2,13 +2,13 @@
 
 import os
 import sys
-sys.path.insert(0, '..')  # Set src as top-level
+sys.path.insert(0, '../..')  # Set src as top-level
 
 import unittest
 import pandas as pd
 from shutil import copy
 
-from src.constants.constants import unittest_short_loc, unittest_long_loc
+from src.utilities.general_constants import unittest_short_loc, unittest_long_loc
 
 from src.recorders.ssd_recorder import SSDRecorder
 from src.recorders.pmt_recorder import PMTRecorder
