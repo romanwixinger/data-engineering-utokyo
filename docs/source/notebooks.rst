@@ -52,4 +52,14 @@ see correlations between the data points, but this turned out to be harder than
 anticipated.
 
 
+Data Exploration
+----------------
 
+Original implementation of the Recorder classes. Loads and visualizes the different
+files.
+
+
+Result Exploration
+----------------
+
+Original notebook to explore the results of the analyses.
