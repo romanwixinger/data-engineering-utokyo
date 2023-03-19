@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 21 12:31:11 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Script to execute the analyses. 
+"""Executes the analyses.
 """
 
-import sys
-sys.path.insert(0,'..')  # Set src as top-level
 
 from datetime import datetime
 
-from src.constants.mot_constants import c_ccd, c_cmos_Fr_20220918
+from src.utilities.camera_constants import c_ccd, c_cmos_Fr_20220918
 from src.recorders.ssd_recorder import SSDRecorder
 from src.recorders.file_recorder import FileRecorder
 from src.analyses.analysis import ResultParameter
@@ -39,8 +32,8 @@ if __name__ == '__main__':
     dead_pixel_percentile = 5.0 # [%], must between 0 and 100
     
     # Output 
-    plot_path = "../plots/beamtime/" # "../plots/20220829/"
-    result_path = "../results/beamtime/" # "../results/20220829/"
+    plot_path = "../plots/beamtime/"  # "../plots/20220829/"
+    result_path = "../results/beamtime/"  # "../results/20220829/"
     
     # Make dirs
     create_folders(plot_path, result_path)
