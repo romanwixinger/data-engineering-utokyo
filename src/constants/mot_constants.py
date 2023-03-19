@@ -7,6 +7,7 @@ This is an unsolved problem.
 Todo:
     * Check that the constants are set correctly.
     * Solve the problem with the region of interest. Maybe it can be detected automatically.
+    * Check the attributes VP_area and r_VP, which might be specific to one setup.
 """
 
 import numpy as np
@@ -14,6 +15,9 @@ import numpy as np
 
 class CameraConstants(object):
     """ Stores the constants of the setup related to the CMOS camera.
+
+    The class has custom getters for composite attributes, which are calculated from multiple attributes.
+    This makes it possible to update attributes without introducing inconsistencies.
     """
 
     # Universal constants
@@ -21,10 +25,10 @@ class CameraConstants(object):
     c = 299792458                      # Speed of light (m/s)
 
     # Atom
-    lambda_Rb = 780 * 1e-9              # Fluorescence wavelength (m)
-    omega0_Rb = 2*np.pi * 299792458
-    Gamma_Rb = 2*np.pi * 7.6 * 1e6      # Life span (Hz)
-    I_sat = 3.5771                      # Saturation strength (mW/cm^2)
+    lambda_Rb = 780 * 1e-9             # Fluorescence wavelength (m)
+    omega0_Rb = 2 * np.pi * 299792458
+    Gamma_Rb = 2 * np.pi * 7.6 * 1e6     # Life span (Hz)
+    I_sat = 3.5771                     # Saturation strength (mW/cm^2)
     
     def __init__(self,
                  Cell_xsize: float,
@@ -34,7 +38,7 @@ class CameraConstants(object):
                  x_power: float,
                  y_power: float, 
                  z_power: float,
-                 two_D_gauss: callable,
+                 model: callable,
                  pulse_per_coulomb: float,
                  Gain: float,
                  beta_cathode: float,
@@ -54,50 +58,128 @@ class CameraConstants(object):
         self.x_power = x_power                  # x-axis optical power (mW) 2x is the return light
         self.y_power = y_power
         self.z_power = z_power
-        self.beam_diam = 1.7                                            # Light beam diameter (cm)
-        self.x_intens = self.x_power/(np.pi*((self.beam_diam/2)**2))    # z-axis light intensity (mW/cm^2)
-        self.y_intens = self.y_power/(np.pi*((self.beam_diam/2)**2))
-        self.z_intens = self.z_power/(np.pi*((self.beam_diam/2)**2))
-        self.I_beam = self.x_intens + self.y_intens + self.z_intens     # MOT Central light intensity
-        self.s_0 = self.I_beam / self.I_sat                             # Saturation parameter
-        self.delta = 2 * np.pi * 10 * 10**(6)                           # Separation (Hz)
-        self.Eff_Gamma_Rb = self.Gamma_Rb * np.sqrt(1 + self.s_0)       # Effective line width
-        
-        # Calculation of solid angle
-        self.VP_area = 8**2 * np.pi                          # ICF34 viewport area (cm^2)
-        self.r_VP = 65                                       # Distance from MOT center to viewport (cm)
-        self.Omega_VP = self.VP_area / self.r_VP**2          # Solid angle of viewport
-        
+        self.beam_diam = 1.7                    # Light beam diameter (cm)
+        self.delta = 2 * np.pi * 10 * 1e6       # Separation (Hz)
+
         # Model
-        self.two_D_gauss = lambda X, A, sigma_x, sigma_y, mu_x, mu_y, C: two_D_gauss(
-            X, A, sigma_x, sigma_y, mu_x, mu_y, C, self.Cell_xsize, self.Cell_ysize
-        )
-        
-        # Conversion formula [CCD]
-        self.Pow_elec_coef =  (self.T_exp * self.eta)/(self.hbar * self.omega0_Rb)  #  Power (W) → Signal (electron) conversion 
-        self.MOTnum_Pow_coef = self.hbar*self.omega0_Rb * self.Gamma_Rb/2 * self.s_0/(1+self.s_0) * 1/(1+(2*self.delta/self.Eff_Gamma_Rb)**2) * self.Omega_VP/(4*np.pi)  # MOT Atomic Number to Power (W) Conversion
-        self.Elec_MOTnum_coef = 1.0 / self.MOTnum_Pow_coef  / self.Pow_elec_coef    #  Signal (electron) to MOT number conversion 
+        self.model = model
+
+        # Calculation of solid angle
+        self.VP_area = 8**2 * np.pi             # ICF34 viewport area (cm^2)
+        self.r_VP = 65                          # Distance from MOT center to viewport (cm)
 
         # Current integrator
-        self.pulse_per_coulomb = pulse_per_coulomb   # (1/C)
+        self.pulse_per_coulomb = pulse_per_coulomb  # (1/C)
 
         # PMT
         self.Gain = Gain                  # (1)
         self.beta_cathode = beta_cathode  # (A/W)
-
-        # Conversion formula [PMT, Rubidium]
-        self.Pow_pulses_per_s_coef = (1.0 / self.pulse_per_coulomb) * (1.0/(self.Gain * self.beta_cathode)) 
-        self.MOTnum_pulses_per_s_coef = self.Pow_pulses_per_s_coef / self.MOTnum_Pow_coef 
 
         # Region of interest (ROI)
         self.Xmin = Xmin
         self.Xmax = Xmax
         self.Ymin = Ymin
         self.Ymax = Ymax
-        self.Xnum = self.Xmax - self.Xmin
-        self.Ynum = self.Ymax - self.Ymin
-        
-        
+
+    # Laser
+    @property
+    def x_intens(self) -> float:
+        """ The x-axis light intensity [mW/cm^2]. """
+        return self.x_power/(np.pi*((self.beam_diam/2)**2))
+
+    @property
+    def y_intens(self) -> float:
+        """ The y-axis light intensity [mW/cm^2]. """
+        return self.y_power/(np.pi*((self.beam_diam/2)**2))
+
+    @property
+    def z_intens(self) -> float:
+        """ The z-axis light intensity [mW/cm^2]. """
+        return self.z_power/(np.pi*((self.beam_diam/2)**2))
+
+    @property
+    def I_beam(self) -> float:
+        """MOT Central light intensity. """
+        return self.x_intens + self.y_intens + self.z_intens
+
+    @property
+    def s_0(self) -> float:
+        """ Saturation parameter. """
+        return self.I_beam / self.I_sat
+
+    @property
+    def Eff_Gamma_Rb(self):
+        """ Effective line width. """
+        return self.Gamma_Rb * np.sqrt(1 + self.s_0)
+
+    # Calculation of the solid angle
+    @property
+    def Omega_VP(self):
+        """Solid angle of viewport.
+        """
+        return self.VP_area / self.r_VP**2
+
+    # Model
+    @property
+    def two_D_gauss(self):
+        return lambda X, A, sigma_x, sigma_y, mu_x, mu_y, C: self.model(
+            X, A, sigma_x, sigma_y, mu_x, mu_y, C, self.Cell_xsize, self.Cell_ysize
+        )
+
+    # Conversion formula [CCD]
+    @property
+    def Pow_elec_coef(self):
+        """Power (W) → Signal (electron) conversion. """
+        return (self.T_exp * self.eta)/(self.hbar * self.omega0_Rb)
+
+    @property
+    def MOTnum_Pow_coef(self):
+        """MOT Atomic Number to Power (W) conversion. """
+        return self.hbar\
+               * self.omega0_Rb \
+               * self.Gamma_Rb/2 \
+               * self.s_0/(1+self.s_0) \
+               * 1/(1+(2*self.delta/self.Eff_Gamma_Rb)**2)\
+               * self.Omega_VP/(4*np.pi)
+
+    @property
+    def Elec_MOTnum_coef(self):
+        """Signal (electron) to MOT number conversion. """
+        return 1.0 / self.MOTnum_Pow_coef / self.Pow_elec_coef
+
+    # Conversion formula [PMT, Rubidium]
+    @property
+    def Pow_pulses_per_s_coef(self):
+        """Conversion formula.
+
+        Todo:
+            * Add description.
+        """
+        return (1.0 / self.pulse_per_coulomb) * (1.0/(self.Gain * self.beta_cathode))
+
+    @property
+    def MOTnum_pulses_per_s_coef(self):
+        """Conversion formula.
+
+        Todo:
+            * Add description.
+        """
+        return self.Pow_pulses_per_s_coef / self.MOTnum_Pow_coef
+
+    # Region of interest
+    @property
+    def Xnum(self):
+        """Width of the region of interest (ROI) in pixels.
+        """
+        return self.Xmax - self.Xmin
+
+    @property
+    def Ynum(self):
+        """Height of the region of interest (ROI) in pixels.
+        """
+        return self.Ymax - self.Ymin
+
+
 def two_D_gauss(X: tuple, 
                 A: float, 
                 sigma_x: float, 
@@ -117,8 +199,6 @@ def two_D_gauss(X: tuple,
     return z
 
 
-""" Instances """
-
 # Original CCD
 c_ccd = CameraConstants(
     Cell_xsize=6.45 * 10**(-6),
@@ -128,7 +208,7 @@ c_ccd = CameraConstants(
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    two_D_gauss=two_D_gauss,
+    model=two_D_gauss,
     pulse_per_coulomb=1e-6,
     Gain=1.0,
     beta_cathode=63.0 / 1000,
@@ -149,7 +229,7 @@ c_cmos_Rb_20220918 = CameraConstants(
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    two_D_gauss=two_D_gauss,
+    model=two_D_gauss,
     pulse_per_coulomb=1e-6,
     Gain=1.0,
     beta_cathode=63.0 / 1000,
@@ -158,6 +238,7 @@ c_cmos_Rb_20220918 = CameraConstants(
     Ymin=233, 
     Ymax=290
 )
+
 
 # CMOS for beamtime (20220918)
 # TODO: Check constants like VP_area and r_VP
@@ -169,7 +250,7 @@ c_cmos_Fr_20220918 = CameraConstants(
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    two_D_gauss=two_D_gauss,
+    model=two_D_gauss,
     pulse_per_coulomb=10e-6,
     Gain=1.0,
     beta_cathode=63.0 / 1000,
@@ -178,7 +259,6 @@ c_cmos_Fr_20220918 = CameraConstants(
     Ymin=233, 
     Ymax=290
 )
-
 
 
 # CMOS for laser room
@@ -191,7 +271,7 @@ c_cmos_laser_room = CameraConstants(
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
-    two_D_gauss=two_D_gauss,
+    model=two_D_gauss,
     pulse_per_coulomb=1e-6,
     Gain=1.0,
     beta_cathode=63.0 / 1000,
