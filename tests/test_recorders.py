@@ -2,7 +2,7 @@
 
 import os
 import sys
-sys.path.insert(0,'../..')  # Set src as top-level
+sys.path.insert(0, '..')  # Set src as top-level
 
 import unittest
 import pandas as pd
@@ -259,4 +259,3 @@ class TestRecorders(unittest.TestCase):
 if __name__ == '__main__': 
 
     unittest.main()
-    
