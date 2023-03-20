@@ -60,6 +60,6 @@ files.
 
 
 Result Exploration
-----------------
+------------------
 
 Original notebook to explore the results of the analyses.

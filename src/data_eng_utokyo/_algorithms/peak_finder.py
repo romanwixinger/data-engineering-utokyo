@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 
-from src.data_eng_utokyo._analyses.analysis import Peak
+from .._algorithms.peak import Peak
         
     
 class PeakFinder(object): 

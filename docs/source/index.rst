@@ -6,7 +6,6 @@ real-time. The package saves a lot of time by providing an easy-to-use interface
 allows to automatically extract key results from the data via Maximum Likelihood Estimation (MLE) and search algorithms.
 
 
-
 Data sources
 ============
 
@@ -40,17 +39,17 @@ The plot and histogram are visualizations of the SSD data. The peaks and
 the background are fitted with an algorithm.
 
 
-.. image:: ../../impressions/SSDPeaks.png
+.. image:: ../../docs/impressions/SSDPeaks.png
    :target: https://github.com/romanwixinger/data-engineering-utokyo
 
 
-.. image:: ../../impressions/SSDSinglePeak.png
+.. image:: ../../docs/impressions/SSDSinglePeak.png
    :target: https://github.com/romanwixinger/data-engineering-utokyo
 
 This 2D plot is obtained by Maximum Likelihood Estimation with a
 Gaussian model on an image from the CCD camera.
 
-.. image:: ../../impressions/CCD2DGaussian.png
+.. image:: ../../docs/impressions/CCD2DGaussian.png
    :target: https://github.com/romanwixinger/data-engineering-utokyo
 
 
@@ -65,20 +64,21 @@ Locally
 
 You can clone the repository to your local computer, load the data to
 your computer, and run the code either in a Jupyter notebook or in a
-Python file. Checkout src/notebooks/recorder_demo.ipynb,
-src/notebooks/ssd_analysis_demo.ipynb and src/main.py as reference. The
-notebooks work directly, because they use the sample data which is part
-of the repository.
+Python file. Checkout notebooks/recorder_demo.ipynb,
+notebooks/ssd_analysis_demo.ipynb and main/main.py as reference.
 
-Make sure that in the beginning of your code you adjust the environment
-such that the src folder is known. If you create your code in the
-analyses folder, then you have to go up two levels to reach the source
-folder, so you use the following code.
+Install the library by navigating into the repo in your CLI and typing
+
+.. code:: bash
+
+   pip install .
+
+When you start Python, then the following imports should work
 
 .. code:: python
 
-   import sys
-   sys.path.insert(0,'../..')
+   import data_eng_utokyo
+
 
 Google Colaboratory
 -------------------
@@ -166,7 +166,7 @@ How to use the package to track your own csv files.
 
 .. code:: python
 
-   from src.recorders.ssd_recorder import SSDRecorder
+   from data_eng_utokyo.recorders import SSDRecorder
 
    ssd_recorder = SSDRecorder(filepath="my_filepath.csv")
    df = ssd_recorder.get_table()               # Full table
@@ -176,7 +176,7 @@ Next we can setup analyses which performs MLE and visualize the data.
 
 .. code:: python
 
-   from src.analyses.ssd_analyses import SSDAnalysis
+   from data_eng_utokyo.analyses import SSDAnalysis
 
    ssd_analysis = SSDAnalysis(
      recorder=ssd_recorder,
@@ -190,9 +190,11 @@ during an experiment.
 
 .. code:: python
 
-   from src.analyses.runner import Runner
-   from src.analyses.ssd_analyses import SSDAnalysis
-   from src.analyses.pmt_analyses import PMTAnalysis
+   from data_eng_utokyo.utilities import Runner
+   from src.analyses import (
+        SSDAnalysis,
+        PMTAnalysis,
+    )
 
    analyses = [
      SSDAnalysis(recorder=ssd_recorder, image_src="../../plots/mock"),
@@ -207,7 +209,7 @@ creation times of these files.
 
 .. code:: python
 
-   from src.recorders.file_recorder import FileRecorder
+   from data_eng_utokyo.recorders import FileRecorder
 
    file_recorder = FileRecorder(
      filepath="path_to_the_folder/",
@@ -224,7 +226,7 @@ fixed dataframe given upon initialization.
 
    import pandas as pd
 
-   from src.recorders.static_recorder import StaticRecorder
+   from data_eng_utokyo.recorders import StaticRecorder
 
    df = pd.DataFrame(
      data=[["Alice", 25], ["Bob", 23], ["Eve", 27]],
@@ -260,6 +262,18 @@ fixed dataframe given upon initialization.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Algorithms
+
+   algorithms
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Utilities
+
+   utilities
+
+.. toctree::
+   :maxdepth: 2
    :caption: Notebooks
 
    notebooks
@@ -273,3 +287,12 @@ fixed dataframe given upon initialization.
 
 How to contribute
 =================
+
+Contributions are welcomed and should apply the usual git-flow: fork this
+repo, create a local branch named 'feature-...'. Commit often to ensure
+that each commit is easy to understand. Name your commits '[feature-...]
+Commit message.', such that it possible to differentiate the commits of
+different features in the main line. Request a merge to the mainline often.
+Please remember to follow the PEP 8 style guide, and add comments whenever
+it helps. The docstring follow the Google Style Python Docstring format.
+The corresponding authors are happy to support you.
