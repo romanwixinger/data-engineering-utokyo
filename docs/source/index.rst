@@ -243,43 +243,43 @@ fixed dataframe given upon initialization.
 **Structure**
 =============
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Data
 
    data
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Recorders
 
    recorders
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Analyses
 
    analyses
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Algorithms
 
    algorithms
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Utilities
 
    utilities
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Notebooks
 
    notebooks
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Constants
 
    constants

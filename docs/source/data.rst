@@ -5,10 +5,6 @@ The package can map csv files created by LabView to pandas dataframes in real-ti
 providing a quadratic speedup compared to reloading the data. One can process new formats easily, be creating a child
 class of Recorder and just overriding the behaviour which has to differ from the default.
 
-Data Sources
-============
-
-The package cover the following data sources at the moment.
 
 SSD
 ---
@@ -51,6 +47,6 @@ CCD camera
 To be added.
 
 How to add new data sources?
-============================
+----------------------------
 
 To be added.
