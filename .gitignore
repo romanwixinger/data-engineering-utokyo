@@ -128,8 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.png
-src/recorders/simulation.csv
-src/analyses/ssd_analysis_results.csv
+src/data_eng_utokyo/_recorders/simulation.csv
+src/data_eng_utokyo/_analyses/ssd_analysis_results.csv
 results/20220829/ssd_analysis_results.csv
 results/20220829/image_analysis_results.csv
 results/20220314/ssd_analysis_results.csv

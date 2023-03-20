@@ -87,7 +87,7 @@ Now you can start to import functionality from the package as described in the e
 How to use the package to track your own csv files. 
 
 ```python
-from src.recorders.ssd_recorder import SSDRecorder
+from src.data_eng_utokyo.recorders import SSDRecorder
 
 ssd_recorder = SSDRecorder(filepath="my_filepath.csv")
 df = ssd_recorder.get_table()               # Full table
@@ -97,7 +97,7 @@ metadata_df = ssd_recorder.get_metadata()   # Just metadata
 Next we can setup analyses which performs MLE and visualize the data. 
 
 ```python
-from src.analyses.ssd_analyses import SSDAnalysis
+from src.data_eng_utokyo.analyses import SSDAnalysis
 
 ssd_analysis = SSDAnalysis(
   recorder=ssd_recorder, 
@@ -110,9 +110,9 @@ ssd_analysis.run()
 Last, we can also use a runner to perform many analyses in real-time during an experiment. 
 
 ```python
-from src.analyses.runner import Runner
-from src.analyses.ssd_analyses import SSDAnalysis
-from src.analyses.pmt_analyses import PMTAnalysis
+from src.data_eng_utokyo.analyses import Runner
+from src.data_eng_utokyo.analyses import SSDAnalysis
+from src.data_eng_utokyo.analyses import PMTAnalysis
 
 analyses = [
   SSDAnalysis(recorder=ssd_recorder, image_src="../../plots/mock"),
@@ -125,7 +125,7 @@ runner.run(cycles=3*60, period_s=60) # Every 60 seconds for three hours
 Sometimes, we want to perform the same analysis on many different files. Then, we can leverage the FileRecorder to find the filenames, paths and creation times of these files. 
 
 ```python
-from src.recorders.file_recorder import FileRecorder
+from src.data_eng_utokyo.recorders.file_recorder import FileRecorder
 
 file_recorder = FileRecorder(
   filepath="path_to_the_folder/", 
@@ -139,7 +139,7 @@ From time to time, we want to test our analysis with a recorder that represents 
 ```python
 import pandas as pd
 
-from src.recorders.static_recorder import StaticRecorder
+from src.data_eng_utokyo.recorders import StaticRecorder
 
 df = pd.DataFrame(
   data=[["Alice", 25], ["Bob", 23], ["Eve", 27]], 
