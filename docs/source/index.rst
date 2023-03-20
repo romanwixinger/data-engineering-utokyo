@@ -236,7 +236,7 @@ fixed dataframe given upon initialization.
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :caption: Contents:
 
 
@@ -283,6 +283,14 @@ fixed dataframe given upon initialization.
    :caption: Constants
 
    constants
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 
 How to contribute

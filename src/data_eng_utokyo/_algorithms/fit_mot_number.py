@@ -28,7 +28,9 @@ class MOTMLE:
          dead_pixels_percentile (float): Guess of the fraction of dead pixels in the image.
 
     Example:
+
         .. code:: python
+
             from data_eng_utokyo.analysis import MOTMLE
 
             mot_mle = MOTMLE(c=c_ccd, references=[], do_subtract_dead_pixels=False)

@@ -31,7 +31,9 @@ class SSDAnalysis(Analysis):
     """Analyses the SSD data provided by a SSRecorder or SSDParser.
 
     Example:
+
         .. code:: python
+
             from data_eng_utokyo.recorders import SSDRecorder
             from data_eng_utokyo.analyses import SSDAnalysis
             from data_eng_utokyo.analyses import ResultParameter
@@ -171,6 +173,7 @@ class SSDAnalysisWrapper(object):
 
     Example:
         .. code:: python
+
             ssd_wrapper = SSDAnalysisWrapper(
             folder="data/sample/",
             result_path="results/20220314/"+"ssd_analysis_results.csv",

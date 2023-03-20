@@ -23,6 +23,7 @@ class ImageAnalysis(Analysis):
 
     Example:
         .. code:: python
+
             from data_eng_utokyo.recorder import FileRecorder
             from data_eng_utokyo.analyses import MOTMLE, ResultParameter, ImageAnalysis
             from data_eng_utokyo.constants import c_ccd
