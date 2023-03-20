@@ -10,9 +10,6 @@ Sources:
 - https://rikei-fufu.com/2020/07/05/post-3270-fitting/
 """
 
-import sys
-sys.path.insert(0, '../..')  # Set src as top-level
-
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
@@ -20,10 +17,10 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from src.constants.mot_constants import c_ccd
+from .._utilities.camera_constants import c_ccd
 
 
-class MOTMLE():
+class MOTMLE:
     """Applies Maximum Likelihood Estimation to extract the MOT number from an image.
 
     Args:

@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
-sys.path.insert(0, '../..')  # Set src as top-level
 
 import unittest
 import pandas as pd
 from shutil import copy
 
-from src.utilities.general_constants import unittest_short_loc, unittest_long_loc
-
-from src.recorders.ssd_recorder import SSDRecorder
-from src.recorders.pmt_recorder import PMTRecorder
-from src.recorders.coil_recorder import CoilRecorder
-from src.recorders.gauge_recorder import GaugeRecorder
-from src.recorders.laser_recorder import LaserRecorder
-from src.recorders.ion_recorder import IonRecorder
-from src.recorders.heater_recorder import HeaterRecorder
+from src.data_eng_utokyo._utilities.general_constants import unittest_short_loc, unittest_long_loc
+from src.data_eng_utokyo.recorders import (
+    SSDRecorder,
+    PMTRecorder,
+    CoilRecorder,
+    GaugeRecorder,
+    LaserRecorder,
+    IonRecorder,
+    HeaterRecorder,
+)
 
 
 n = 6

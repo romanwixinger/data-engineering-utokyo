@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Runner for analyses on the J5 computer.
+"""Runs a collection of analyses on the J5 computer.
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 from datetime import datetime
 
-from src.analyses.ssd_analysis import SSDAnalysisWrapper
-from src.analyses.image_analysis import ImageAnalysis
-from src.analyses.mkdir import create_folders
-from src.analyses.runner import Runner
+from .ssd_analysis import SSDAnalysisWrapper
+from .image_analysis import ImageAnalysis
+from .mkdir import create_folders
+from .runner import Runner
 
 
 if __name__=="_ _main_ _":

@@ -2,10 +2,6 @@
 """Analyses the half-life time of the peaks in the SSD pulse data and plots the region around the peaks as histogram.
 """
 
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,7 +9,7 @@ import matplotlib.dates as md
 import datetime as dt
 import math
 
-from src.constants.constants import plotting_params
+from .._utilities.general_constants import plotting_params
 plt.rcParams.update(plotting_params)
 
 

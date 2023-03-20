@@ -2,13 +2,10 @@
 """Tracks the Rb dispenser and the neutralizer current.
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
-
 import numpy as np
 import pandas as pd
 
-from src.recorders.recorder import Recorder
+from .recorder import Recorder
 
 
 class GaugeRecorder(Recorder): 

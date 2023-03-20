@@ -4,16 +4,13 @@
 Use cases include the image data from the CMOS camera and the SSD data. 
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
-
 import os
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
 
-from src.recorders.recorder import Recorder
-from src.analyses.path_helper import PathHelper 
+from .recorder import Recorder
+from .._analyses.path_helper import PathHelper
 
 
 class FileRecorder(Recorder): 

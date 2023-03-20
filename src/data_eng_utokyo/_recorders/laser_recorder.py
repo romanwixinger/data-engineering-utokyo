@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Records the laser frequency.
 """
-Created on Tue Sep  6 11:11:54 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Laser recorder.
-"""
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 import csv
 
-from src.recorders.recorder import Recorder
+from .recorder import Recorder
 
 
 class LaserRecorder(Recorder): 

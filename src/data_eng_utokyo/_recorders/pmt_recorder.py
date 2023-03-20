@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
+"""Records the PMT signal.
+
+PMT stands for photo multiplier tube.
 """
-Created on Mon Sep  5 17:26:25 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-PMT Recorder 
-"""
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 
-from src.recorders.recorder import Recorder
+from .recorder import Recorder
 
 
 class PMTRecorder(Recorder): 

@@ -2,14 +2,10 @@
 """Finds peaks in the SSD pulse data.
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
-
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from src.analyses.peak import Peak
+from .analysis import Peak
         
     
 class PeakFinder(object): 
@@ -195,6 +191,3 @@ class PeakFinder(object):
         exp_background = time_diff * self.background
         obs_pulses = len(df1.index)
         return obs_pulses >= exp_background + self.min_pulses_for_peak
-        
-        
-            

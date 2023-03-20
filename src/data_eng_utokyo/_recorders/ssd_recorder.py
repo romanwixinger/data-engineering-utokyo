@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
+"""Records the SSD data.
+
+Applicable for data from the WE7000 DAQ for the SSD2. The PMT current from the MOT will be obtained like this in our
+next experiment.
 """
-Created on Mon Sep  5 17:18:01 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-SSD Recorder: Applicable for data from the WE7000 DAQ for the SSD2. 
-The PMT current from the MOT will be obtained like this in our next experiment.
-"""
-
-import sys
-sys.path.insert(0,'..')
 
 import csv
 import numpy as np
 import pandas as pd
 
-from src.recorders.recorder import Recorder
+from .recorder import Recorder
 
 
 class SSDRecorder(Recorder): 
-    """ Class for data engineering of the SSD2 data. """
+    """Records all the SSD2 data at once.
+
+    Note:
+        * In most cases, there is too much data incoming at once. In this case, we recommend to use the SSDParser, which
+            reads the data in chunks.
+    """
 
     def __init__(self, filepath: str, always_update: bool=False, lines_per_update: int=1e5):
         super(SSDRecorder, self).__init__(
@@ -96,8 +95,9 @@ class SSDRecorder(Recorder):
         
         
 class SSDParser(SSDRecorder): 
-    """ Acts as a parser in the sense that it forgets about the old data upon
-        reloading. This keeps the table size small. 
+    """Records the SSD data in chunks.
+
+    Acts as a parser in the sense that it forgets about the old data upon reloading. This keeps the table size small.
     """
     
     def _update_data(self):

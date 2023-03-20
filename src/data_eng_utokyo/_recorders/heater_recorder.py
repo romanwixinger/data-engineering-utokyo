@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Records the log of the IR heater output percentage for target heating.
 """
-Created on Tue Sep  6 11:06:02 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Log of the IR heater output percentage for target heating. 
-"""
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 import csv
 
-from src.recorders.recorder import Recorder
+from .recorder import Recorder
 
 
 class HeaterRecorder(Recorder): 
@@ -62,4 +54,3 @@ class HeaterRecorder(Recorder):
     def _harmonize_time(self): 
         self._table_df["datetime"] = self._table_df["Date"].apply(lambda s: s.replace("/", "-")) + " " + self._table_df["Time"]
         self._table_df["timestamp"] = self._table_df["datetime"].apply(pd.Timestamp).values.astype(np.int64)
-        

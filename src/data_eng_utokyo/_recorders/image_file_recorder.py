@@ -1,27 +1,18 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Oct  5 10:38:16 2022
+"""Keeps track of the available image files online on Google Colab.
 
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Keeps track of the available image files online on Google Colab. This version
-solves the problem that online the images have new creation times, so we cannot
-rely on it. Instead, we look the timestamp up in the metadata file 
-all_data.csv which is located in the next-higher folder. Then we match them 
+This version solves the problem that online the images have new creation times, so we cannot rely on it. Instead, we
+look the timestamp up in the metadata file all_data.csv which is located in the next-higher folder. Then we match them
 according to the number. 
 """
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import os
 import numpy as np
 import pandas as pd
-from datetime import datetime
 from pathlib import Path
 
-from src.recorders.recorder import Recorder
-from src.analyses.path_helper import PathHelper 
+from .recorder import Recorder
+from .._analyses.path_helper import PathHelper
 
 
 class ImageFileRecorder(Recorder): 

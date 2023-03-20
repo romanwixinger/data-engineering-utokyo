@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
-"""PMT Analysis.
+"""Analyses the PMT data provided by the PMTRecorder.
 """
-
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import pandas as pd
 
-from src.recorders.pmt_recorder import PMTRecorder
-from src.analyses.analysis import Analysis, ResultParameter
+from .._recorders.pmt_recorder import PMTRecorder
+from .analysis import Analysis, ResultParameter
 
 
 class PMTAnalysis(Analysis): 
@@ -61,7 +57,7 @@ class PMTAnalysis(Analysis):
     
 if __name__ == '__main__': 
     
-    pmt_recorder = PMTRecorder(filepath = "../../data/sample/all_data.csv")
+    pmt_recorder = PMTRecorder(filepath ="../../../data/sample/all_data.csv")
     result_param = ResultParameter(image_src="", 
                                    image_extension=".png",
                                    result_filepath="../../results/"+"pmt_analysis_results.csv",)

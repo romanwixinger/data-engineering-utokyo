@@ -6,13 +6,13 @@ results as a table.
 """
 
 import sys
-sys.path.insert(0,'../..')  # Set src as top-level
+sys.path.insert(0, '../../..')  # Set src as top-level
 
 import pandas as pd
 
-from src.recorders.file_recorder import FileRecorder, FileParser
-from src.analyses.fit_mot_number import MOTMLE
-from src.analyses.analysis import Analysis, ResultParameter
+from src.data_eng_utokyo.recorders.file_recorder import FileRecorder, FileParser
+from src.data_eng_utokyo.analyses import MOTMLE
+from src.data_eng_utokyo.analyses import Analysis, ResultParameter
     
     
 class ImageAnalysis(Analysis):
@@ -135,7 +135,7 @@ if __name__=="__main__":
                               do_subtract_dead_pixels=False).perform_analysis
 
     result_param = ResultParameter(
-        image_src="../../plots/20220829/image/",
+        image_src="../../../plots/20220829/image/",
         image_extension=".png",
         result_filepath="../../results/20220829/"+"image_analysis_results.csv"
         )

@@ -1,21 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 11 11:03:58 2022
+"""Converts a pandas dataframe into a recorder.
 
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-When we already have a pandas dataframe and want to use it in the form of a 
+When we already have a pandas dataframe and want to use it in the form of a
 recorder, for example in the ImageAnalysis for the camera data from the laser
 room, then we use this static recorder. 
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
-
 import pandas as pd
 
 
-class StaticRecorder(): 
+class StaticRecorder:
     """ Represents a static pandas dataframe as a recorder. 
     """
     

@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Runner for a collection of Analyses.
+"""Runs a collection of analyses.
 """
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import time
 
@@ -30,5 +27,3 @@ class Runner(object):
     
     def next_execution(self, start, period_s, i):
         return start + period_s * i
-        
-    

@@ -1,20 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Records the HeatTimeLog.
 """
-Created on Tue Nov 8 13:31:02 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Recorder for the HeatTimeLog. 
-"""
-
-
-import sys
-sys.path.insert(0,'../..')
 
 import numpy as np
 import pandas as pd
 
-from src.recorders.recorder import Recorder
+from .recorder import Recorder
 
 
 class HeatTimeRecorder(Recorder): 
@@ -43,7 +34,6 @@ class HeatTimeRecorder(Recorder):
         self._table_df["timestamp"] = self._table_df["Time"].apply(pd.Timestamp).values.astype(np.int64)
 
 
-    
     
     
     

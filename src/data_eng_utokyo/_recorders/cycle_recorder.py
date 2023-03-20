@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Combines all results of a cycle.
+"""Combines all results of an analysis cycle.
 
 The CycleRecorder combines all results of a cycle, namely 
 
@@ -14,11 +14,7 @@ Todo:
     * Implement the CycleRecorder.
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
-
-from src.recorders.recorder import Recorder
-from src.recorders.result_recorder import Recorder, SSDResultsRecorder, ImageResultsRecorder, ParameterRecorder
+from .recorder import Recorder
 
 
 class CycleRecorder(Recorder): 

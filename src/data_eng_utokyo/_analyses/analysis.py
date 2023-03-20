@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Defines a parent class for analyzing the data provided by recorders.
 """
-Created on Wed Sep  7 09:43:50 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Base class for analyses. 
-"""
-
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import os
 from abc import abstractmethod
@@ -16,7 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from src.recorders.recorder import Recorder
+from .._recorders.recorder import Recorder
 
 
 class ResultParameter(object): 

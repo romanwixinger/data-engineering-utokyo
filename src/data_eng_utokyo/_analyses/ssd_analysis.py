@@ -10,9 +10,6 @@ One can use the Runner to conveniently process the full data in real time.
 This allows us to get visualizations for all peaks. 
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
-
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,16 +18,14 @@ import pandas as pd
 import datetime as dt
 import queue
 
-import src.constants.constants as c
-from src.recorders.ssd_recorder import SSDRecorder, SSDParser
-from src.recorders.file_recorder import FileParser
-from src.analyses.analysis import Analysis, ResultParameter
-from src.analyses.peak_finder import PeakFinder
-from src.analyses.mkdir import mkdir_if_not_exist
+from .._recorders.ssd_recorder import SSDRecorder, SSDParser
+from .._recorders.file_recorder import FileRecorder, FileParser
+from .analysis import Analysis, ResultParameter
+from .peak_finder import PeakFinder
+from .mkdir import mkdir_if_not_exist
+from .._utilities.general_constants import plotting_params
+plt.rcParams.update(plotting_params)
 
-
-plt.rcParams.update(c.plotting_params)
-            
 
 class SSDAnalysis(Analysis): 
     
@@ -261,7 +256,7 @@ if __name__ == '__main__':
     ssd_wrapper = SSDAnalysisWrapper(
         folder="../../data/sample/", 
         result_path="../../results/20220314/"+"ssd_analysis_results.csv",
-        plot_path="../../plots/20220829/",
+        plot_path="../../../plots/20220829/",
         image_extension=".png",
         match=".*Slot.*.csv",
         time_interval=(

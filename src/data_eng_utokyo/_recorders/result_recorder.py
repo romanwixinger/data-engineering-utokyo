@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 18 18:05:39 2022
-
-@author: Roman Wixinger (roman.wixinger@gmail.com)
-
-Simple recorders to track the result of the SSDAnalysis, ImageAnalysis and the
-parameter inputs. 
+"""Records the result of the SSDAnalysis, ImageAnalysis and the parameter inputs.
 """
 
-import sys
-sys.path.insert(0,'../..')  # Set src as top-level
 
 import numpy as np
 import pandas as pd
 
-from src.recorders.recorder import Recorder
+from .recorder import Recorder
 
 
 class SSDResultsRecorder(Recorder):

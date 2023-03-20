@@ -6,9 +6,6 @@ Note:
     csv table which you want to map to a real-time recorder object. 
 """
 
-import sys
-sys.path.insert(0,'../..')
-
 import os
 import pandas as pd
 import time

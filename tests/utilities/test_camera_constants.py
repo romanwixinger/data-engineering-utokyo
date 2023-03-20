@@ -1,6 +1,6 @@
 import pytest
 
-from src.utilities.camera_constants import CameraConstants
+from src.data_eng_utokyo.constants import CameraConstants
 
 
 standard_args = {

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Utilities for finding the paths of the data, for example the many images created with the CMOS camera.
+"""Finds the paths of the data, for example the many images created with the CMOS camera.
 
 Can retrieve the newest filepath which matches a certain regex. This can safe us from hardcoding the filepaths.
 """
