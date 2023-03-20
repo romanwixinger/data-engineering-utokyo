@@ -9,7 +9,7 @@ import matplotlib.dates as md
 import datetime as dt
 import math
 
-from .._utilities.general_constants import plotting_params
+from src.data_eng_utokyo._utilities.general_constants import plotting_params
 plt.rcParams.update(plotting_params)
 
 

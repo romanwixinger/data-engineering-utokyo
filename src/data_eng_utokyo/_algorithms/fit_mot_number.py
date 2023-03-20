@@ -17,8 +17,6 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from .._utilities.camera_constants import c_ccd
-
 
 class MOTMLE:
     """Applies Maximum Likelihood Estimation to extract the MOT number from an image.
@@ -28,6 +26,20 @@ class MOTMLE:
          references (list[str]): List of files (images) which are to be used as reference for subtracting dead pixels.
          do_subtract_dead_pixels (bool): Should we guess and subtract the dead pixels before the fitting and plotting.
          dead_pixels_percentile (float): Guess of the fraction of dead pixels in the image.
+
+    Example:
+        .. code:: python
+            from data_eng_utokyo.analysis import MOTMLE
+
+            mot_mle = MOTMLE(c=c_ccd, references=[], do_subtract_dead_pixels=False)
+            perform_analysis = mot_mle.perform_analysis
+            perform_analysis(
+                source="path_to_image_file.xlsx",
+                target="visualization.png",
+                mode="mot number",
+                min_signal=0,
+                time="1st of January 2000 at 1 p.m."
+            )
 
     Attributes:
         c: Lookup for the constants
@@ -519,18 +531,3 @@ class MOTMLE:
         print("R^2 = ", statistics["R^2"])
         print("*******************")
         return
-        
-
-if __name__ == "__main__":
-    
-    mot_mle = MOTMLE(c=c_ccd, references=[], do_subtract_dead_pixels=False)
-    perform_analysis = mot_mle.perform_analysis
-    
-    for i in list(range(1, 10)): 
-        for mode in ["mot number"]: 
-            source = f"C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\images\\ccd_detuning0{i}.xlsx"
-            target = f"fit_{mode}_{i}.png"
-            perform_analysis(source, target, mode)
-      
-
-

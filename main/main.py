@@ -5,23 +5,27 @@
 
 from datetime import datetime
 
-from src.data_eng_utokyo.utilities.camera_constants import c_cmos_Fr_20220918
-from src.data_eng_utokyo.recorders import SSDRecorder
-from src.data_eng_utokyo.recorders.file_recorder import FileRecorder
-from src.data_eng_utokyo.analyses import ResultParameter
-from src.data_eng_utokyo.analyses import SSDAnalysis
-from src.data_eng_utokyo.analyses import ImageAnalysis
-from src.data_eng_utokyo.analyses import create_folders
-from src.data_eng_utokyo.analyses import Runner
-from src.data_eng_utokyo.analyses import MOTMLE
+from data_eng_utokyo.constants import c_cmos_Fr_20220918
+from data_eng_utokyo.recorders import (
+    SSDRecorder,
+    FileRecorder,
+)
+from data_eng_utokyo.analyses import (
+    ResultParameter,
+    SSDAnalysis,
+    ImageAnalysis,
+    Runner,
+    MOTMLE,
+)
+from data_eng_utokyo.utilities import create_folders
 
 
 if __name__ == '__main__': 
     
     # Input 
-    ssd_file = "../data/20220829/-20220829-144945-Slot1-In1.csv"
-    image_folder = "../data/beamtime/mot_data/" # "C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot"
-    match = ".*cmos.*.csv" # ".*ccd_detuning.*.xlsx"
+    ssd_file = "data/20220829/-20220829-144945-Slot1-In1.csv"
+    image_folder = "data/beamtime/mot_data/"
+    match = ".*cmos.*.csv"
     c = c_cmos_Fr_20220918
     min_signal = 95000
     time_interval = (
@@ -29,11 +33,11 @@ if __name__ == '__main__':
         datetime(2030, 1, 1, 12, 0, 0)
         )
     use_n_reference_images = 10
-    dead_pixel_percentile = 5.0 # [%], must between 0 and 100
+    dead_pixel_percentile = 5.0  # [%], must between 0 and 100
     
     # Output 
-    plot_path = "../plots/beamtime/"  # "../plots/20220829/"
-    result_path = "../results/beamtime/"  # "../results/20220829/"
+    plot_path = "plots/beamtime/"
+    result_path = "results/beamtime/"
     
     # Make dirs
     create_folders(plot_path, result_path)

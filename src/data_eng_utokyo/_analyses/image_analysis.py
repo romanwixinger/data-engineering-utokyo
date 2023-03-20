@@ -5,14 +5,10 @@ The plots contain 2D gaussian fits which tell us the MOT number and the power. T
 results as a table.
 """
 
-import sys
-sys.path.insert(0, '../../..')  # Set src as top-level
-
 import pandas as pd
 
-from src.data_eng_utokyo.recorders.file_recorder import FileRecorder, FileParser
-from src.data_eng_utokyo.analyses import MOTMLE
-from src.data_eng_utokyo.analyses import Analysis, ResultParameter
+from .._recorders.file_recorder import FileRecorder, FileParser
+from .analysis import Analysis, ResultParameter
     
     
 class ImageAnalysis(Analysis):
@@ -24,6 +20,34 @@ class ImageAnalysis(Analysis):
         result_param (ResultRecorder): Object which tells how the plot should be formated.
         time_interval (tuple): Tuple of start and endtime. Just files in this interval will be processed.
         min_signal (int): Images with sum of pixels less than this threshold will be ignored.
+
+    Example:
+        .. code:: python
+            from data_eng_utokyo.recorder import FileRecorder
+            from data_eng_utokyo.analyses import MOTMLE, ResultParameter, ImageAnalysis
+            from data_eng_utokyo.constants import c_ccd
+
+            perform_analysis = MOTMLE(
+                c=c_ccd,
+                references=[],
+                do_subtract_dead_pixels=False,
+            ).perform_analysis
+
+            result_param = ResultParameter(
+                image_src="../../../plots/20220829/image/",
+                image_extension=".png",
+                result_filepath="../../results/20220829/"+"image_analysis_results.csv",
+            )
+            file_recorder = FileRecorder(
+                filepath="C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\",
+                match=".*ccd_.*.xlsx",
+            )
+            image_analysis = ImageAnalysis(
+                recorder=file_recorder,
+                perform_analysis=perform_analysis,
+                result_param=result_param,
+                )
+            enriched_df = image_analysis.run()
 
     Attributes:
         self.was_run_before (bool): Flag.
@@ -125,27 +149,3 @@ class ImageAnalysis(Analysis):
         enriched_rows = [list(row) + [(stat[col] if stat["fit_successful"] else None) for col in new_columns] + [stat["fit_successful"]]\
                          for (i, row), stat in zip(df.iterrows(), statistics_list)]
         return pd.DataFrame(data=enriched_rows, columns=columns + new_columns + ["fit_successful"])
-    
-    
-if __name__=="__main__": 
-    
-    from src.constants.mot_constants import c_ccd
-    perform_analysis = MOTMLE(c=c_ccd, 
-                              references=[], 
-                              do_subtract_dead_pixels=False).perform_analysis
-
-    result_param = ResultParameter(
-        image_src="../../../plots/20220829/image/",
-        image_extension=".png",
-        result_filepath="../../results/20220829/"+"image_analysis_results.csv"
-        )
-    file_recorder = FileRecorder(
-        filepath="C:\\Users\\roman\\Desktop\\Research_UTokyo\\Data\\mot\\",
-        match=".*ccd_.*.xlsx"
-        )
-    image_analysis = ImageAnalysis(
-        recorder=file_recorder,
-        perform_analysis=perform_analysis, 
-        result_param=result_param
-        )
-    enriched_df = image_analysis.run()

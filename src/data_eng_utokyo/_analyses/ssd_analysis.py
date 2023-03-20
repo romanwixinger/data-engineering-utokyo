@@ -19,15 +19,28 @@ import datetime as dt
 import queue
 
 from .._recorders.ssd_recorder import SSDRecorder, SSDParser
-from .._recorders.file_recorder import FileRecorder, FileParser
+from .._recorders.file_recorder import FileParser
 from .analysis import Analysis, ResultParameter
-from .peak_finder import PeakFinder
+from .._algorithms.peak_finder import PeakFinder
 from .mkdir import mkdir_if_not_exist
 from .._utilities.general_constants import plotting_params
 plt.rcParams.update(plotting_params)
 
 
-class SSDAnalysis(Analysis): 
+class SSDAnalysis(Analysis):
+    """Analyses the SSD data provided by a SSRecorder or SSDParser.
+
+    Example:
+        .. code:: python
+            from data_eng_utokyo.recorders import SSDRecorder
+            from data_eng_utokyo.analyses import SSDAnalysis
+            from data_eng_utokyo.analyses import ResultParameter
+
+            ssd_recorder = SSDRecorder(...)
+            result_param = ResultParamter(...)
+            ssd_analysis = SSDAnalysis(ssd_recorder, result_param)
+            ssd_analysis.run()
+    """
     
     def __init__(self, 
                  recorder: SSDRecorder or SSDParser,
@@ -154,7 +167,20 @@ class SSDAnalysisWrapper(object):
     timespan and applies the SSDAnalysis on them 1 by 1. 
     
     Implements the same public methods as the Analysis class, such that it can
-    be used in Runner. 
+    be used in Runner.
+
+    Example:
+        .. code:: python
+            ssd_wrapper = SSDAnalysisWrapper(
+            folder="data/sample/",
+            result_path="results/20220314/"+"ssd_analysis_results.csv",
+            plot_path="plots/20220829/",
+            image_extension=".png",
+            match=".*Slot.*.csv",
+            time_interval=(
+                dt.datetime(2000, 1, 1, 12, 0, 0),
+                dt.datetime(2030, 1, 1, 12, 0, 0)
+            ))
     """
     
     def __init__(self, 

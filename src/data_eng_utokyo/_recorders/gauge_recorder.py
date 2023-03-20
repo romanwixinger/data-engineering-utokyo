@@ -24,7 +24,7 @@ class GaugeRecorder(Recorder):
         return pd.read_csv(
             filepath_or_buffer=self.filepath, 
             header=0, 
-            names=["Timestamp", "Rb disp.", "Neut.","Surf. Ref.","NC1","NC2","NC3"]
+            names=["Timestamp", "Rb disp.", "Neut.", "Surf. Ref.", "NC1", "NC2", "NC3"]
             )  
     
     def _harmonize_time(self): 

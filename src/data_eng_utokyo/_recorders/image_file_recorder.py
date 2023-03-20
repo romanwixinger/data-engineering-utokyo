@@ -12,7 +12,7 @@ import pandas as pd
 from pathlib import Path
 
 from .recorder import Recorder
-from .._analyses.path_helper import PathHelper
+from .._utilities.path_helper import PathHelper
 
 
 class ImageFileRecorder(Recorder): 

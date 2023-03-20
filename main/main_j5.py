@@ -5,10 +5,10 @@
 
 from datetime import datetime
 
-from .ssd_analysis import SSDAnalysisWrapper
-from .image_analysis import ImageAnalysis
-from .mkdir import create_folders
-from .runner import Runner
+from data_eng_utokyo.analyses import SSDAnalysisWrapper
+from data_eng_utokyo.analyses import ImageAnalysis
+from data_eng_utokyo.utilities import create_folders
+from data_eng_utokyo.utilities import Runner
 
 
 if __name__=="_ _main_ _":
