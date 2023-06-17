@@ -11,6 +11,7 @@ Todo:
 """
 
 import numpy as np
+import json
 
 
 class CameraConstants(object):
@@ -34,10 +35,13 @@ class CameraConstants(object):
                  Cell_xsize: float,
                  Cell_ysize: float, 
                  T_exp: float,
+                 magnification: float,
                  eta: float,
                  x_power: float,
                  y_power: float, 
                  z_power: float,
+                 detuning: float,
+                 beam_diam: float,
                  model: callable,
                  pulse_per_coulomb: float,
                  Gain: float,
@@ -52,14 +56,14 @@ class CameraConstants(object):
         self.Cell_ysize = Cell_ysize            # CCD Cell y size (m)
         self.T_exp = T_exp                      # Exposure time
         self.eta = eta                          # Quantum efficiency
-        self.b = eta                            # Lens magnification
+        self.b = magnification                            # Lens magnification
         
         # Laser
         self.x_power = x_power                  # x-axis optical power (mW) 2x is the return light
         self.y_power = y_power
         self.z_power = z_power
-        self.beam_diam = 1.7                    # Light beam diameter (cm)
-        self.delta = 2 * np.pi * 10 * 1e6       # Separation (Hz)
+        self.beam_diam = beam_diam                    # Light beam diameter (cm)
+        self.delta = 2 * np.pi * detuning * 1e6       # Separation (Hz)
 
         # Model
         self.model = model
@@ -198,16 +202,51 @@ def two_D_gauss(X: tuple,
 
     return z
 
+def c_config(config):
+    """    
+    run = configuration_filename
+
+    # Load configuration
+    with open(f"configuration/temperature/{run}.json") as file:
+        config = json.load(file)
+    """
+
+    c = CameraConstants(
+        Cell_xsize=config['cmos']['Cell_xsize'][0],
+        Cell_ysize=config['cmos']['Cell_ysize'][0], 
+        T_exp = config['cmos']['T_exp'][0],
+        eta = 0.3,
+        magnification=config['cmos']['magnification'][0],
+        x_power=config['laser']['x_power'][0],
+        y_power=config['laser']['y_power'][0], 
+        z_power=config['laser']['z_power'][0],
+        detuning=config['laser']['detuning'][0],
+        beam_diam=config['laser']['beam_diam'][0],
+        model=two_D_gauss,
+        pulse_per_coulomb=1e-6,
+        Gain=1.0,
+        beta_cathode=63.0 / 1000,
+        Xmin=config['cmos']['Xmin'][0],
+        Xmax=config['cmos']['Xmax'][0],
+        Ymin=config['cmos']['Ymin'][0], 
+        Ymax=config['cmos']['Ymax'][0]
+    )
+
+    return c
+
 
 # Original CCD
 c_ccd = CameraConstants(
     Cell_xsize=6.45 * 10**(-6),
     Cell_ysize=6.45 * 10**(-6), 
     T_exp=50 * 10**(-6),
+    magnification=1,
     eta=0.5,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
+    detuning=10,
+    beam_diam=0.7,
     model=two_D_gauss,
     pulse_per_coulomb=1e-6,
     Gain=1.0,
@@ -225,10 +264,13 @@ c_cmos_Rb_20220918 = CameraConstants(
     Cell_xsize=3.45 * 10**(-6),
     Cell_ysize=3.45 * 10**(-6), 
     T_exp=50 * 10**(-6),
+    magnification=1,
     eta=0.3,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
+    detuning=10,
+    beam_diam=0.7,
     model=two_D_gauss,
     pulse_per_coulomb=1e-6,
     Gain=1.0,
@@ -246,10 +288,13 @@ c_cmos_Fr_20220918 = CameraConstants(
     Cell_xsize=3.45 * 10**(-6),
     Cell_ysize=3.45 * 10**(-6), 
     T_exp=50 * 10**(-6),
+    magnification=1,
     eta=0.46,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
+    detuning=10,
+    beam_diam=0.7,
     model=two_D_gauss,
     pulse_per_coulomb=10e-6,
     Gain=1.0,
@@ -267,10 +312,13 @@ c_cmos_laser_room = CameraConstants(
     Cell_xsize=3.45 * 10**(-6),
     Cell_ysize=3.45 * 10**(-6), 
     T_exp = 50 * 10**(-6),
+    magnification=1,
     eta = 0.3,
     x_power=9 * 2,
     y_power=10 * 2, 
     z_power=9 * 2,
+    detuning=10,
+    beam_diam=0.7,
     model=two_D_gauss,
     pulse_per_coulomb=1e-6,
     Gain=1.0,

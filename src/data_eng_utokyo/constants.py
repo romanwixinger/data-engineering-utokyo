@@ -1,5 +1,7 @@
 from ._utilities.camera_constants import (
     CameraConstants,
+    c_config,
+    two_D_gauss,
     c_ccd,
     c_cmos_Fr_20220918,
     c_cmos_laser_room,
