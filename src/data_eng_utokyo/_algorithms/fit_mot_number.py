@@ -100,26 +100,22 @@ class MOTMLE:
         total_sum = np.sum(data["z"]) 
         if total_sum < min_signal: 
             print(f"The image was discarded because the total signal is {total_sum} < {min_signal} after subtraction of the background of {self.dead_pixel_sum}")
-            return {
-                "fit_successful": False, 
-                "total_sum": total_sum, 
-                "enough_pulses": False,
-                }
-        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal} + {self.dead_pixel_sum} after subtraction of the background of {self.dead_pixel_sum}.")
-            
+            return {"fit_successful": False, "total_sum": total_sum, "enough_pulses": False}
+
         # Fit MLE
+        print(f"The image will be analyzed, the total signal is {total_sum} > {min_signal} + {self.dead_pixel_sum} after subtraction of the background of {self.dead_pixel_sum}.")
         statistics = self._fitting(model=self.c.two_D_gauss, data=data, mode=mode)
         statistics["total_sum"] = total_sum
         statistics["enough_pulses"] = True
         
         # Plot 3D
-        fit_data = self._generate_fit_data(self.c.two_D_gauss, data, statistics)\
+        fit_data = self._generate_fit_data(self.c.two_D_gauss, data, statistics, df)\
             if statistics["fit_successful"] else None
         self._plot_fit_result(data, fit_data, target=target, mode=mode, time=time)
         
         # Plot heatmap
         heatmap_target = target[:-4] + "_heatmap" + target[-4:] 
-        self._plot_heatmap(data, fit_data, target=heatmap_target, mode=mode, time=time)
+        self._plot_heatmap(data, fit_data, target=heatmap_target, mode=mode, time=time, df=df)
 
         # Print and return statistics
         self._print_stats(statistics)
@@ -141,18 +137,15 @@ class MOTMLE:
         return df
     
     def _df_to_array(self, df: pd.DataFrame) -> np.array: 
-        """Takes the image as df, cuts it to the interesting parts, and returns it as np.array.
+        """Takes the image as df and returns it as np.array.
 
         Args:
             df (pd.DataFrame): The dataframe representing the image.
 
         Returns:
-            Interesting part of the image as np.array.
+            Image as np.array
         """
-        return df\
-            .iloc[self.c.Ymin:self.c.Ymax, self.c.Xmin:self.c.Xmax]\
-            .to_numpy()\
-            .reshape(-1)
+        return df.to_numpy().reshape(-1)
         
     def _precalculate_dead_pixels(self):
         """Calculates a heuristic for finding the dead pixels.
@@ -259,9 +252,10 @@ class MOTMLE:
         """
         
         # Create x, y
-        x_data = np.array([np.arange(self.c.Xmin, self.c.Xmax)] * self.c.Ynum).reshape(-1) * self.c.Cell_xsize * self.c.b
-        y_data= np.repeat(np.arange(self.c.Ymin, self.c.Ymax), self.c.Xnum) * self.c.Cell_ysize * self.c.b
-    
+        Ynum, Xnum = df.to_numpy().shape
+        x_data = np.array([np.arange(0, Xnum)] * Ynum).reshape(-1) * self.c.Cell_xsize * self.c.b
+        y_data= np.repeat(np.arange(0, Ynum), Xnum) * self.c.Cell_ysize * self.c.b
+
         # Scale z
         scaling_factor = self._get_scaling_factor(mode)
         array = self._df_to_array(df)
@@ -269,7 +263,7 @@ class MOTMLE:
         
         # Combine
         data = {"x": x_data, "y": y_data, "z": z_data}
-        return data
+        return data 
     
     def _get_scaling_factor(self, mode: str) -> float: 
         """ Loads a physical scaling parameter depending on the mode.
@@ -387,16 +381,11 @@ class MOTMLE:
         sigma_x = np.sqrt(np.average((x - mu_x)**2, weights=weights))
         sigma_y = np.sqrt(np.average((y - mu_y)**2, weights=weights))
         
-        print("mu_x =", mu_x, "mean x =", np.mean(x))
-        print("mu_y =", mu_y, "mean y =", np.mean(y))
-        print("sigma_x =", sigma_x, "std_x =", np.std(x))
-        print("sigma_y =", sigma_y, "std_y =", np.std(y))
-        
         C = 1e2 if mode == "mot number" else 1e-12
         p0 = np.array([A, sigma_x, sigma_y, mu_x, mu_y, C])
         return p0
         
-    def _generate_fit_data(self, model: callable, data: dict, statistics: dict): 
+    def _generate_fit_data(self, model: callable, data: dict, statistics: dict, df: pd.DataFrame): 
         """Takes the x, y values of the data and the fit parameter, and returns fitted z values.
 
          Does this on a x, y grid in the same format as the data.
@@ -412,16 +401,16 @@ class MOTMLE:
         """
         # Extract fit parameters
         popt = statistics["popt"]
+        Ynum, Xnum = df.to_numpy().shape
     
         # Create a surface showing the result of fitting for a graph
-        fit_x = np.linspace(min(data["x"]), max(data["x"]), self.c.Xnum)
-        fit_y = np.linspace(min(data["y"]), max(data["y"]), self.c.Ynum)
+        fit_x = np.linspace(min(data["x"]), max(data["x"]), Xnum)
+        fit_y = np.linspace(min(data["y"]), max(data["y"]), Ynum)
         X, Y = np.meshgrid(fit_x, fit_y)
         
         # Evaluate the fitted model on the grid
         fit_z = model((X, Y), popt[0], popt[1], popt[2], popt[3], popt[4], popt[5])
-        # fit_z = two_D_gauss((X, Y), 200000., 0.0001, 0.0001, 0.00624, 0.0091, 102.)
-        
+
         # Convert the fit into the same format as the data
         fit_data = {"x": X, "y": Y, "z": fit_z}
         return fit_data
@@ -438,24 +427,14 @@ class MOTMLE:
         """
         # Setup figure
         fig = plt.figure()
-        ax = Axes3D(fig)
+        ax = fig.add_subplot(111, projection='3d')
         
         # Plot measured data 
-        ax.plot(data["x"], 
-                data["y"], 
-                data["z"], 
-                ms=3, 
-                marker="o",
-                linestyle='None', 
-                c="blue")   
+        ax.scatter(data["x"], data["y"], data["z"], s=1, marker="o", linestyle='None', c="black")
     
         # Plot fitted data       
         if fit_data is not None: 
-            ax.plot_wireframe(fit_data["x"], 
-                              fit_data["y"], 
-                              fit_data["z"], 
-                              rstride=10, 
-                              cstride=10)
+            ax.plot_surface(fit_data["x"], fit_data["y"], fit_data["z"], rstride=10, cstride=10, alpha=0.5, color='blue')
             
         # Labels
         ax.set_title(f"Image recorded at {time}")
@@ -465,10 +444,9 @@ class MOTMLE:
         
         # Save image
         plt.savefig(target, dpi=300)
-        plt.show(block=False)
         return
         
-    def _plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str):
+    def _plot_heatmap(self, data: dict, fit_data, target: str, mode: str, time: str, df: pd.DataFrame):
         """Plots the 3d data and the fit as heatmap. Saves the image to the url.
 
         Args:
@@ -481,12 +459,12 @@ class MOTMLE:
         
         # Setup figure
         z = data["z"]
-        z_arr = z.reshape((self.c.Ynum, self.c.Xnum))
-        
+        Ynum, Xnum = df.to_numpy().shape
+        z_arr = z.reshape((Ynum, Xnum))
+
         # Case: Fit not successful -> Just original data
         if fit_data is None: 
-            fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3),
-                            subplot_kw={'xticks': [], 'yticks': []})
+            fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(9, 3), subplot_kw={'xticks': [], 'yticks': []})
             fig.suptitle(f"Image recorded at {time}")
     
             ax.imshow(z_arr, cmap='hot', interpolation='none')
@@ -495,9 +473,8 @@ class MOTMLE:
         # Case: Fit successful -> Original data and fit data
         else: 
             z_fit = fit_data["z"]
-            z_arr_fit = z_fit.reshape((self.c.Ynum, self.c.Xnum))
-            fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(9, 6),
-                            subplot_kw={'xticks': [], 'yticks': []})
+            z_arr_fit = z_fit.reshape((Ynum, Xnum))
+            fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(9, 6), subplot_kw={'xticks': [], 'yticks': []})
             fig.suptitle(f"Image recorded at {time}")
             
             for ax, arr, title in zip(axs, [z_arr, z_arr_fit], ["Camera signal", "Fit"]): 
@@ -505,7 +482,6 @@ class MOTMLE:
                 ax.set_title(title)
     
         plt.savefig(target, dpi=300)
-        plt.show()
         return
     
     def _print_stats(self, statistics: dict):
