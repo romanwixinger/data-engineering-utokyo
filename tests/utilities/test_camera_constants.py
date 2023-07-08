@@ -18,7 +18,10 @@ standard_args = {
     "Xmin": 480,
     "Xmax": 560,
     "Ymin": 630,
-    "Ymax": 810
+    "Ymax": 810,
+    "magnification": 1.0,
+    "detuning": 1.0,
+    "beam_diam": 1.0,
 }
 
 
