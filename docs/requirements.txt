@@ -3,3 +3,4 @@ numpy>=1.21
 pandas>=1.4.0
 scipy>=1.9
 pylatexenc
+sphinx-rtd-theme

@@ -41,7 +41,7 @@ using the properties decorator, we can now easily do update like
 
     for x_power in range(100):
         c.x_power = x_power
-        print("The derived value is x_intens = {c.x_intens}.")
+        print(f"The derived value is x_intens = {c.x_intens}.")
 
 
 We see that we can access the method x_intens() like an attribute and it always gives us the value
